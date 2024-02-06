@@ -1,4 +1,4 @@
-rulekit_gui
+# Rulekit GUI
 
 To run the application, it is suggested to create an environment using conda, 
 and then install all the required packages from the requirements file. 
