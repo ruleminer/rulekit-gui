@@ -21,4 +21,6 @@ And call the following command:
    streamlit run rulekit_gui_app.py
 ```
 
+The application window will open in the browser.
+
 
