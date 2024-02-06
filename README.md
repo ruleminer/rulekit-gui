@@ -6,7 +6,8 @@ and then install all the required packages from the requirements file.
 If you already have installed Anaconda, in the console release the following commands:
 
 
-```conda create --name myenv python=3.11
+```
+   conda create --name myenv python=3.11
    conda activate myenv
    pip install -r requirements.txt
 
