@@ -22,5 +22,3 @@ And call the following command:
 ```
 
 The application window will open in the browser.
-
-
