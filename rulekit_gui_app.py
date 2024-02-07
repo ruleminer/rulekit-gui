@@ -265,10 +265,10 @@ class MyProgressListener(RuleInductionProgressListener):
         # if uncovered_examples_count < total_examples_count * 0.1:
         #     self._should_stop = True
         
-        if st.session_state.click_stop:
-            st.session_state.rule = self.df
-            #st.write("Early stop")
-            self._should_stop = True
+        # if st.session_state.click_stop:
+        #     st.session_state.rule = self.df
+        #     #st.write("Early stop")
+        #     self._should_stop = True
 
         progress = ((total_examples_count - uncovered_examples_count)/total_examples_count)
         progress_bar.progress(progress, text = "Generating rules...")
@@ -438,7 +438,7 @@ if st.session_state.data:
                 # Definition of progress bar, stop button and placeholder - 
                 # this must by defined outside the class that follows the progress of rule induction #
                 progress_bar = st.progress(0)
-                st.button('Stop', on_click=click_stop)
+                #st.button('Stop', on_click=click_stop)
                 placeholder = st.empty()  # placceholder is used to updated the table with rules during the rule induction process
 
 
