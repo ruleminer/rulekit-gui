@@ -478,7 +478,8 @@ if st.session_state.data:
 
  
                     # Obtaining the godness of fit using a range of metrics - functions that were used are in the gui_function.py script. #
-                    if genre == "Classification":
+                    
+                    if genre == "Classification" and st.session_state.button_rule:
                         measure = measure_selection.Metric[measure_selection.Desc == metric]
                         prediction, classification_metrics = clf.predict(x_test, return_metrics=True)
                         tmp, confusion_matrix = get_prediction_metrics(measure, prediction, y_test, classification_metrics)
@@ -525,14 +526,14 @@ if st.session_state.data:
             # Obtaining the godness of fit using a range of metrics - functions that were used are in the gui_function.py script. #
             # This is the same as in coss validation loop but for the "only training" and "training and testing - hold out" evaluation types. #
             if eval_type == "Only training": 
-                if genre == "Classification":
+                if genre == "Classification" and st.session_state.button_rule:
                     measure = measure_selection.Metric[measure_selection.Desc == metric]
                     prediction, model_metrics = clf.predict(x_train, return_metrics=True)
                     new_model_metric, class_confusion_matrix = get_prediction_metrics(measure, prediction, y_train, model_metrics)
                     ruleset_stats = get_ruleset_stats_class(measure, ruleset)
                     st.write("Confusion matrix")
                     st.dataframe(pd.DataFrame(class_confusion_matrix))
-                elif genre == "Regresion":
+                elif genre == "Regresion" and st.session_state.button_rule:
                     measure = measure_selection.Metric[measure_selection.Desc == metric]
                     prediction = clf.predict(x_train)
                     new_model_metric = get_regression_metrics(measure, prediction, y_train)
@@ -542,14 +543,14 @@ if st.session_state.data:
                     ruleset_stats = get_ruleset_stats_surv(ruleset)
 
             elif eval_type == "Training and testing - Hold out":
-                if genre == "Classification":
+                if genre == "Classification" and st.session_state.button_rule:
                     measure = measure_selection.Metric[measure_selection.Desc == metric]
                     prediction, model_metrics = clf.predict(x_test, return_metrics=True)
                     new_model_metric, class_confusion_matrix = get_prediction_metrics(measure, prediction, y_test, model_metrics)
                     ruleset_stats = get_ruleset_stats_class(measure, ruleset)
                     st.write("Confusion matrix")
                     st.dataframe(pd.DataFrame(class_confusion_matrix))
-                elif genre == "Regresion":
+                elif genre == "Regresion" and st.session_state.button_rule:
                     measure = measure_selection.Metric[measure_selection.Desc == metric]
                     prediction = clf.predict(x_test)
                     new_model_metric = get_regression_metrics(measure, prediction, y_test)
