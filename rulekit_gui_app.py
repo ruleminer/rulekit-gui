@@ -489,6 +489,7 @@ if st.session_state.data:
                                                 get_ruleset_stats_class(measure, ruleset)])
                         confusion_matrix_en += confusion_matrix
 
+
                     elif genre == "Survival Analysis":
                         ibs = clf.score(x_test, y_test)
                         survival_metrics.append(ibs)
