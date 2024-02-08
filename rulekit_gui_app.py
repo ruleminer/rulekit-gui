@@ -293,7 +293,7 @@ if 'gn' not in st.session_state:
     st.session_state.gn = False
 
 if 'button_rule' not in st.session_state:
-    st.session_state.button_rule = False
+    st.session_state.button_rule = True
 
 if "rule" not in st.session_state:
     st.session_state.rule = []
@@ -468,6 +468,12 @@ if st.session_state.data:
                 confusion_matrix_en = np.array([[0.0, 0.0], [0.0, 0.0]])
                 survival_metrics = []
 
+                entier_model = clf.fit(x,y)
+                entire_ruleset = clf.model
+
+                entire_ruleset_stats = []
+                for rule in entire_ruleset.rules:
+                    entire_ruleset_stats.append({"Rules" : str(rule)})
 
                 for train_index, test_index in skf.split(x, y):
                     x_train, x_test = x.iloc[train_index], x.iloc[test_index]
@@ -493,26 +499,14 @@ if st.session_state.data:
                         ibs = clf.score(x_test, y_test)
                         survival_metrics.append(ibs)
                         ruleset_stats = pd.concat([ruleset_stats, get_ruleset_stats_surv(ruleset)])
-                
 
-                # Displaying the average ruleset statistics and prediction metrics based on models obtained in cross validation loop. #
-                if genre == "Classification":
-                    confusion_matrix_en /= nfold
-                    st.write("Average confusion matrix")
-                    st.dataframe(pd.DataFrame(confusion_matrix))
-                    st.write("")
-                    st.write("Average ruleset statistics")
-                    st.table(ruleset_stats.mean())
-                    st.write("")
-                    st.write("Average prediction metrics")
-                    st.table(prediction_metrics.mean())
-                elif genre == "Survival Analysis":
-                    st.write("Average survival metrics")
-                    st.write(f'Integrated Brier Score: {np.round(np.mean(survival_metrics), 6)}')
-                    st.write("")
-                    st.write("Average ruleset statistics")
-                    st.table(ruleset_stats.mean())
-                    
+
+                ruleset_stats.index = [f"Fold {i}" for i in range(1, nfold+1)]
+                st.write("Ruleset statistics")
+                st.table(ruleset_stats)
+
+                st.write("Rules for entire model")
+                st.table(entire_ruleset_stats)
 
         else:
             if uploaded_file is None:
@@ -543,6 +537,17 @@ if st.session_state.data:
                         prediction = clf.predict(x_train)
                         ruleset_stats = get_ruleset_stats_surv(ruleset)
 
+
+                    if genre != "Survival Analysis":
+                        new_model_metric.index = ["Values"]
+                        st.write("Model statistics")
+                        st.table(new_model_metric.transpose())
+                    
+                    ruleset_stats = pd.DataFrame(ruleset_stats)
+                    ruleset_stats.index = ["Values"]
+                    st.write("Ruleset statistics")
+                    st.table(ruleset_stats.transpose())  
+
                 elif eval_type == "Training and testing - Hold out":
                     if genre == "Classification":
                         measure = measure_selection.Metric[measure_selection.Desc == metric]
@@ -554,15 +559,43 @@ if st.session_state.data:
                     elif genre == "Regresion":
                         measure = measure_selection.Metric[measure_selection.Desc == metric]
                         prediction = clf.predict(x_test)
-                        new_model_metric = get_regression_metrics(measure, prediction, y_test)
+                        new_model_metric = get_regression_metrics(measure, prediction, y_test.to_numpy())
                         ruleset_stats = get_ruleset_stats_reg(measure, ruleset)
                     elif genre == "Survival Analysis":
                         prediction = clf.predict(x_test)
                         ruleset_stats = get_ruleset_stats_surv(ruleset)
 
-                if genre != "Survival Analysis":
-                    st.write("Model statistics")
-                    st.table(new_model_metric)
+
+                    if genre != "Survival Analysis":
+                        new_model_metric.index = ["Values"]
+                        st.write("Model statistics")
+                        st.table(new_model_metric.transpose())
+                    
+                    ruleset_stats = pd.DataFrame(ruleset_stats)
+                    ruleset_stats.index = ["Values"]
+                    st.write("Ruleset statistics")
+                    st.table(ruleset_stats.transpose())    
+
+                elif eval_type == "Cross Validation":
+                    # Displaying the average ruleset statistics and prediction metrics based on models obtained in cross validation loop. #
+                    if genre == "Classification":
+                        confusion_matrix_en /= nfold
+                        st.write("Average confusion matrix")
+                        st.dataframe(pd.DataFrame(confusion_matrix))
+                        st.write("")
+                        st.write("Average ruleset statistics")
+                        st.table(ruleset_stats.mean())
+                        st.write("")
+                        st.write("Average prediction metrics")
+                        st.table(prediction_metrics.mean())
+                    elif genre == "Survival Analysis":
+                        st.write("Average survival metrics")
+                        st.write(f'Integrated Brier Score: {np.round(np.mean(survival_metrics), 6)}')
+                        st.write("")
+                        st.write("Average ruleset statistics")
+                        st.table(ruleset_stats.mean())
+
+                # if genre != "Survival Analysis":
+                #     st.write("Model statistics")
+                #     st.table(new_model_metric)
                 
-                st.write("Ruleset statistics")
-                st.table(ruleset_stats)
