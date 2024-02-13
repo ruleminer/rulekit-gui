@@ -73,6 +73,72 @@ def regression_param():
     return dictionary
 
 
+def define_prefered_extend(expert_preferred_conditions = [],  expert_forbidden_conditions = []):
+
+    def add_pref(type, num, rule):
+        tmp = ('preferred-'+type+'-'+str(num-1), rule)
+        expert_preferred_conditions.append(tmp)
+
+    def add_forb(type, num, rule):
+        tmp = ('forbidden-'+type+'-'+str(num-1), rule)
+        expert_forbidden_conditions.append(tmp)
+
+    st.write("")
+    st.write("Preferred rules")
+    col1, col2, col3 = st.columns([3,2,5])
+    with col1:
+        type_pref = st.selectbox("Insert type of conditions", ('attribute', 'condition'), key="type_pref")
+    with col2:
+        num_pref = st.number_input("Insert rule number", min_value=1, value=1, format = '%i', key="num_pref")
+    with col3:
+        pref = st.text_input("Insert expert rules", value="", key="pref_txt")
+
+    if pref != "" and pref != st.session_state["pref"]:
+        add_pref(type_pref, num_pref, pref)
+        st.session_state.pref = pref
+    expert_preferred_conditions = st.data_editor(expert_preferred_conditions, num_rows="dynamic", width=1500, key="df1")
+        
+    st.write("")
+    st.write("Forbidden rules")
+    col1_forb, col2_forb, col3_forb = st.columns([3,2,5])
+    with col1_forb:
+        type_forb = st.selectbox("Insert type of conditions", ('attribute', 'condition'), key="type_forb")
+    with col2_forb:
+        num_forb = st.number_input("Insert rule number", min_value=1, value=1, format = '%i', key="num_forb")
+    with col3_forb:
+        forb = st.text_input("Insert forbidden conditions", value="", key="forb_txt")
+
+    if forb != "" and forb != st.session_state["forb"]:
+        add_forb(type_forb, num_forb, forb)
+        st.session_state.forb = forb
+    expert_forbidden_conditions = st.data_editor(expert_forbidden_conditions, num_rows="dynamic", width=1500, key="forb_df")
+
+    return expert_preferred_conditions, expert_forbidden_conditions   
+
+
+
+def define_prefered_induction(expert_rules = []):
+
+    def add_expert_rule(num, rule):
+        tmp = ('rule-'+str(num-1), rule)
+        expert_rules.append(tmp)
+
+    st.write("")
+    st.write("Expert induction rules")
+    col1, col2 = st.columns([2, 5])
+    with col1:
+        num_exp = st.number_input("Insert rule number", min_value=1, value=1, format = '%i')
+    with col2:
+        ind_exp = st.text_input("Insert expert rules", value="")
+
+    if ind_exp != "" and ind_exp != st.session_state["ind_exp"]:
+        add_expert_rule(num_exp, ind_exp)
+        st.session_state.ind_exp = ind_exp
+    expert_rules = st.data_editor(expert_rules, num_rows="dynamic", width=1500)
+
+    return expert_rules
+
+
 def define_params_class():
     
     on_expert = st.toggle('Do you want to performe expert induction?', value=False)
@@ -80,9 +146,12 @@ def define_params_class():
     metric = metric_selection()
     param = common_params()
     class_param = classification_param()
-       
 
     if on_expert is False:
+        st.session_state.pref_list = []
+        st.session_state.forb_list = []
+        st.session_state.ind_exp_list = []
+
         clf = RuleClassifier(
             induction_measure=metric["ind_cluss"],
             pruning_measure=metric["prun_cluss"],
@@ -123,12 +192,24 @@ def define_params_class():
             extend_using_automatic = expert_params["extend_using_automatic"],
             induce_using_preferred = expert_params["induce_using_preferred"],
             induce_using_automatic = expert_params["induce_using_automatic"],
-            # consider_other_classes = st.toggle("Consider other classes", value=False),
+            consider_other_classes = st.toggle("Consider other classes", value=False),
             # preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
             # preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
             )
         
-    return clf, metric["ind_cluss"]
+        if expert_params["extend_using_preferred"]:
+            st.session_state.pref_list, st.session_state.forb_list = define_prefered_extend(st.session_state.pref_list, st.session_state.forb_list)
+        else:
+            st.session_state.pref_list = []
+            st.session_state.forb_list = []
+
+
+        if expert_params["induce_using_preferred"]:
+            st.session_state.ind_exp_list = define_prefered_induction(st.session_state.ind_exp_list)
+        else:
+            st.session_state.ind_exp_list = []
+        
+    return clf, metric["ind_cluss"], on_expert
         
     
 def define_param_reg():
@@ -140,6 +221,10 @@ def define_param_reg():
     reg_param = regression_param()
 
     if on_expert is False:
+        st.session_state.pref_list = []
+        st.session_state.forb_list = []
+        st.session_state.ind_exp_list = []
+        
         clf = RuleRegressor(
             induction_measure=metric["ind_cluss"],
             pruning_measure=metric["prun_cluss"],
@@ -180,7 +265,20 @@ def define_param_reg():
             # preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
             )
         
-    return clf, metric["ind_cluss"]
+
+        if expert_params["extend_using_preferred"]:
+            st.session_state.pref_list, st.session_state.forb_list = define_prefered_extend(st.session_state.pref_list, st.session_state.forb_list)
+        else:
+            st.session_state.pref_list = []
+            st.session_state.forb_list = []
+
+
+        if expert_params["induce_using_preferred"]:
+            st.session_state.ind_exp_list = define_prefered_induction(st.session_state.ind_exp_list)
+        else:
+            st.session_state.ind_exp_list = []
+        
+    return clf, metric["ind_cluss"], on_expert
 
 def define_param_surv():
     on_expert = st.toggle('Do you want to performe expert induction?', value=False)
@@ -188,6 +286,10 @@ def define_param_surv():
     param = common_params()
 
     if on_expert is False:
+        st.session_state.pref_list = []
+        st.session_state.forb_list = []
+        st.session_state.ind_exp_list = []
+
         clf = SurvivalRules(
             survival_time_attr = 'survival_time',
             max_rule_count=param["max_rule_count"],
@@ -198,6 +300,7 @@ def define_param_surv():
             ignore_missing=param['ignore_missing'],
             select_best_candidate=param["select_best_candidate"],
             complementary_conditions=param["complementary_conditions"])
+        
     elif on_expert:
         st.text("")
         st.write("Expert induction parameters")
@@ -221,7 +324,19 @@ def define_param_surv():
             # preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
             )
         
-    return clf
+        if expert_params["extend_using_preferred"]:
+            st.session_state.pref_list, st.session_state.forb_list = define_prefered_extend(st.session_state.pref_list, st.session_state.forb_list)
+        else:
+            st.session_state.pref_list = []
+            st.session_state.forb_list = []
+
+
+        if expert_params["induce_using_preferred"]:
+            st.session_state.ind_exp_list = define_prefered_induction(st.session_state.ind_exp_list)
+        else:
+            st.session_state.ind_exp_list = []
+
+    return clf, on_expert
 
     
 
@@ -286,6 +401,24 @@ class MyProgressListener(RuleInductionProgressListener):
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
 ## Defining session variables - they do not reset when the stop button is pressed. ##
+if "pref" not in st.session_state:
+    st.session_state.pref = "none"
+
+if "pref_list" not in st.session_state:
+    st.session_state.pref_list = []
+
+if "forb" not in st.session_state:
+    st.session_state.forb = "none"
+
+if "forb_list" not in st.session_state:
+    st.session_state.forb_list = []
+
+if "ind_exp" not in st.session_state:
+    st.session_state.ind_exp = "none"
+
+if "ind_exp_list" not in st.session_state:
+    st.session_state.ind_exp_list = []
+
 if "click_stop" not in st.session_state:
     st.session_state.click_stop = False
 
@@ -387,11 +520,11 @@ if st.session_state.data:
             
             # Definition of the model creation with the call of functions that allow the selection of parameters of the algorithm #
             if genre == "Classification":
-                clf, metric = define_params_class()
+                clf, metric, on_expert = define_params_class()
             elif genre == "Regresion":
-                clf, metric = define_param_reg()
+                clf, metric, on_expert = define_param_reg()
             elif genre == "Survival Analysis":
-                clf = define_param_surv()
+                clf, on_expert = define_param_surv()
             
 
 
@@ -446,9 +579,16 @@ if st.session_state.data:
                 # This is because for this case when the progress bar is uploading the trainig process doesn't work. We are sill working on it. #
                 if genre != "Classification":
                     clf.add_event_listener(MyProgressListener())
-
+                
                 # Model training process with updating progress bar and rule table #
-                clf.fit(x_train, y_train)
+                if on_expert:
+                    clf.fit(x_train, y_train, 
+                            expert_preferred_conditions = st.session_state.pref_list, 
+                            expert_forbidden_conditions = st.session_state.forb_list, 
+                            expert_rules = st.session_state.ind_exp_list)
+                else:
+                    clf.fit(x_train, y_train)
+
                 progress_bar.progress(100)
                 progress_bar.empty()                    
 
