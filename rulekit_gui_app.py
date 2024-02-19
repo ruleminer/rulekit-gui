@@ -385,10 +385,16 @@ class MyProgressListener(RuleInductionProgressListener):
         #     #st.write("Early stop")
         #     self._should_stop = True
 
-        progress = ((total_examples_count - uncovered_examples_count)/total_examples_count)
-        progress_bar.progress(progress, text = "Generating rules...")
+        progress = ((total_examples_count - uncovered_examples_count)/(total_examples_count))
+
+        if progress > st.session_state.prev_progress: 
+            progress_bar.progress(progress, text = "Generating rules...")
+            st.session_state.prev_progress = progress
+
         self.df.append(self.rule)
-        placeholder.table(self.df)
+
+        if eval_type != "Cross Validation":
+            placeholder.table(self.df)
         #self._uncovered_examples_count = uncovered_examples_count
     
     def should_stop(self) -> bool:
@@ -401,6 +407,9 @@ class MyProgressListener(RuleInductionProgressListener):
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
 ## Defining session variables - they do not reset when the stop button is pressed. ##
+if "prev_progress" not in st.session_state:
+    st.session_state.prev_progress = 0
+
 if "pref" not in st.session_state:
     st.session_state.pref = "none"
 
@@ -509,6 +518,7 @@ if st.session_state.data:
             st.session_state.button_rule = not st.session_state.button_rule
             st.session_state.gn = False
             st.session_state.click_stop = False
+            st.session_state.prev_progress = 0
 
         st.button('Define the induction parameters', on_click=click_button_rule)
 
@@ -551,6 +561,7 @@ if st.session_state.data:
 
         # Function that change the state of session variables as response to the button click (Button - Generate Rules) #
         def click_gn():
+            st.session_state.prev_progress = 0
             st.session_state.gn = True
             st.session_state.click_stop = False
 
@@ -561,7 +572,7 @@ if st.session_state.data:
 
             # Model training process for "only training" and "training and testing - hold out" evaluation types #
             if eval_type == "Only training" or eval_type == "Training and testing - Hold out":
-
+                nfold = 1
                 # Function that change the state of session variable as response to the button click (Button - Stop). 
                 # That button doesn't work at this moment, but still it is visible for user.#
                 def click_stop():
@@ -570,15 +581,17 @@ if st.session_state.data:
             
                 # Definition of progress bar, stop button and placeholder - 
                 # this must by defined outside the class that follows the progress of rule induction #
+                progress = 0
                 progress_bar = st.progress(0)
                 #st.button('Stop', on_click=click_stop)
                 placeholder = st.empty()  # placceholder is used to updated the table with rules during the rule induction process
 
-
+                
                 # This is an exception to adding progress tracking for classification models.  
                 # This is because for this case when the progress bar is uploading the trainig process doesn't work. We are sill working on it. #
-                if genre != "Classification":
-                    clf.add_event_listener(MyProgressListener())
+                #if genre != "Classification":
+                clf.add_event_listener(MyProgressListener())
+                
                 
                 # Model training process with updating progress bar and rule table #
                 if on_expert:
@@ -615,19 +628,34 @@ if st.session_state.data:
                 for rule in entire_ruleset.rules:
                     entire_ruleset_stats.append({"Rules" : str(rule)})
 
+                st.session_state_prev_progress = 0
+                progress_bar = st.progress(0)
                 for train_index, test_index in skf.split(x, y):
                     x_train, x_test = x.iloc[train_index], x.iloc[test_index]
                     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-                    clf.fit(x_train, y_train)
-                    ruleset = clf.model
+                    if genre == "Classification":
+                        if on_expert:
+                            model_clone = ExpertRuleClassifier(**entier_model.get_params())
+                        else:
+                            model_clone = RuleClassifier(**entier_model.get_params())
+                    elif genre == "Survival Analysis":
+                        if on_expert:
+                            model_clone = ExpertSurvivalRules(**entier_model.get_params())
+                        else:
+                            model_clone = SurvivalRules(**entier_model.get_params())
 
- 
+
+                    model_clone.add_event_listener(MyProgressListener())
+                    model_clone.fit(x_train, y_train)
+                    ruleset = model_clone.model
+
+
                     # Obtaining the godness of fit using a range of metrics - functions that were used are in the gui_function.py script. #
                     
                     if genre == "Classification" and st.session_state.button_rule:
                         measure = measure_selection.Metric[measure_selection.Desc == metric]
-                        prediction, classification_metrics = clf.predict(x_test, return_metrics=True)
+                        prediction, classification_metrics = model_clone.predict(x_test, return_metrics=True)
                         tmp, confusion_matrix = get_prediction_metrics(measure, prediction, y_test, classification_metrics)
 
                         prediction_metrics = pd.concat([prediction_metrics, tmp])
@@ -636,10 +664,12 @@ if st.session_state.data:
                         confusion_matrix_en += confusion_matrix
 
                     elif genre == "Survival Analysis":
-                        ibs = clf.score(x_test, y_test)
+                        ibs = model_clone.score(x_test, y_test)
                         survival_metrics.append(ibs)
                         ruleset_stats = pd.concat([ruleset_stats, get_ruleset_stats_surv(ruleset)])
 
+                progress_bar.progress(100)
+                progress_bar.empty()
 
                 ruleset_stats.index = [f"Fold {i}" for i in range(1, nfold+1)]
                 st.write("Ruleset statistics")
