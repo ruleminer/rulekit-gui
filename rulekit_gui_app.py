@@ -62,8 +62,8 @@ def common_param_expert():
                   "extend_using_automatic" : st.toggle("Extend using automatic", value=False),
                   "induce_using_preferred" : st.toggle("Induce using preferred", value=False),
                   "induce_using_automatic" : st.toggle("Induce using automatic", value=False),
-                  #"preferred_conditions_per_rule" : st.number_input("Preferred conditions per rule", min_value=0, value=  int(1.796e+308), format = '%i'),
-                  #"preferred_attributes_per_rule" : st.number_input("Preferred attributes per rule", min_value=0, value=  int(1.796e+308), format = '%i'),
+                  "preferred_conditions_per_rule" : st.number_input("Preferred conditions per rule", min_value=0, value=0, format = '%i'),
+                  "preferred_attributes_per_rule" : st.number_input("Preferred attributes per rule", min_value=0, value=0, format = '%i'),
                   }
     return dictionary
 
@@ -193,8 +193,8 @@ def define_params_class():
             induce_using_preferred = expert_params["induce_using_preferred"],
             induce_using_automatic = expert_params["induce_using_automatic"],
             consider_other_classes = st.toggle("Consider other classes", value=False),
-            # preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
-            # preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
+            preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
+            preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
             )
         
         if expert_params["extend_using_preferred"]:
@@ -261,8 +261,8 @@ def define_param_reg():
             extend_using_automatic = expert_params["extend_using_automatic"],
             induce_using_preferred = expert_params["induce_using_preferred"],
             induce_using_automatic = expert_params["induce_using_automatic"],
-            # preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
-            # preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
+            preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
+            preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
             )
         
 
@@ -320,8 +320,8 @@ def define_param_surv():
             extend_using_automatic = expert_params["extend_using_automatic"],
             induce_using_preferred = expert_params["induce_using_preferred"],
             induce_using_automatic = expert_params["induce_using_automatic"],
-            # preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
-            # preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
+            preferred_conditions_per_rule = expert_params["preferred_conditions_per_rule"],
+            preferred_attributes_per_rule = expert_params["preferred_attributes_per_rule"]
             )
         
         if expert_params["extend_using_preferred"]:
@@ -449,7 +449,16 @@ if "data" not in st.session_state:
 ## Load a dataset that complies with the given conditions and in .csv format. ##
 with tab1:
     st.title("Dataset")
-    st.write("Here will be the data set contruction rules that are necessary to run the application")
+    with st.container(border=True):
+        multi = '''In order to make the application work, your dataset must be properly prepared:  
+        - the supported file format is CSV,  
+        - UTF-8 encoding, the field separator is a comma, while the decimal is a period,  
+        - missing values are represented as an empty character,  
+        - the first line of the loaded file is the column names,  
+        - the decision attribute must be named target in classification and regression, while for survival - survival_time and survival_status.
+        '''
+        st.write(multi)
+
     uploaded_file = st.file_uploader('File uploader')
     
     if uploaded_file is None:
