@@ -19,3 +19,46 @@ Then, in the `Model` tab, you can define the parameters of the rule induction an
 
 
 You can look at all the available parameters in the documentation [here](https://adaa-polsl.github.io/RuleKit-python/v1.7.6/index.html)
+
+
+## Installation and Usage
+### Clone repository
+first create a working directory into where the application should be placed. 
+Then call the following commands in Git Bash:
+
+```
+cd PATH TO YOUR DIRECTORY
+git clone https://github.com/ruleminer/rulekit-gui.git
+```
+
+### Docker
+
+To run the library using Docker, make sure you have **Docker** installed on your system. 
+If you are a Windows user in the first place you should start **Docker Desktop** which is responsible for starting the engine.
+Then execute the following command in your terminal (CMD):
+
+```
+powershell -File [Your path to the "script_to_run_app.ps1" file, which is located in the folder where you cloned the repository]
+```
+
+This command will execute a PowerShell script in a command line window, which is responsible 
+for creating the Docker Image and running the application as a Container. Make sure you specify the correct 
+path to the script, including the `.ps1` file extension.
+
+
+### Running the application manually
+If you don't want to use the PowerShell script you can create the Docker Image yourself by staying in Git Bash.
+Make sure you're in your working directory, then type the following command at the command line:
+
+```
+docker build -t streamlit-rulekit-gui .
+```
+
+This will create an Image containing the proper environment to run the application. 
+Then simply run the image in the container using the local host - tab following command:
+
+```
+docker run -p 8501:8501 streamlit-rulekit-gui
+```
+
+After that you should be able to open the applications in your browser at the address: `http://localhost:8501`
