@@ -1,24 +1,18 @@
 # Rulekit GUI
 
-To run the application, it is suggested to create an environment using conda, 
-and then install all the required packages from the `requirements.txt` file. 
+This library provides a Graphical User Interface (GUI) for the RuleKit tool that is used 
+to generate rule sets for classification, regression and survival problems based on a provided dataset.
+You can find the RuleKit at `https://github.com/adaa-polsl/RuleKit-python.git`.
 
-If you already have installed Anaconda, in the console release the following commands:
+For the application to work correctly your dataset should comply with the following requirements:
+- the supported file format is CSV,
+- UTF-8 encoding, the field separator is a comma `,`, while the decimal is a period `.`,
+- missing values are represented as an empty character `""`,
+- the first line of the loaded file is the column names,
+- the decision attribute must be named `target` in classification and regression, 
+   while for survival - `survival_time` and `survival_status`.
 
+After loading a dataset, you will see a preview of it with column names and values. 
+Then, in the `Model` tab, you can define the parameters of the rule induction and the type of problem it should address.
 
-```
-   conda create --name myenv python=3.11
-   conda activate myenv
-   pip install -r requirements.txt
-```
-
-Then, in the console, open the folder where the application source code files 
-(`rulekit_gui_app.py` and `gui_functions.py`) are located. 
-And call the following command:
-
-```
-   cd PATH TO YOUR FILE
-   streamlit run rulekit_gui_app.py
-```
-
-The application window will open in the browser.
+![model example](../foto_do_README/model.png)
