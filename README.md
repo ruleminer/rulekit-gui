@@ -23,7 +23,7 @@ You can look at all the available parameters in the documentation [here](https:/
 
 ## Installation and Usage
 ### Clone repository
-first create a working directory into where the application should be placed. 
+First create a working directory into where the application should be placed. 
 Then call the following commands in Git Bash:
 
 ```
@@ -61,4 +61,4 @@ Then simply run the image in the container using the local host - tab following 
 docker run -p 8501:8501 streamlit-rulekit-gui
 ```
 
-After that you should be able to open the applications in your browser at the address: `http://localhost:8501`
+After that you should be able to open the applications in your browser at the address: `http://localhost:8501`.
