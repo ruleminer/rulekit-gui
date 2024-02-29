@@ -15,7 +15,7 @@ For the application to work correctly your dataset should comply with the follow
 After loading a dataset, you will see a preview of it with column names and values. 
 Then, in the `Model` tab, you can define the parameters of the rule induction and the type of problem it should address.
 
-![model example](https://drive.google.com/file/d/12WQLT2mhkK-7Thw7gqL2QaiUpK1b6TsA/view?usp=sharing/model.png)
+![model example](../images/model.png)
 
 
 You can look at all the available parameters in the documentation [here](https://adaa-polsl.github.io/RuleKit-python/v1.7.6/index.html)
