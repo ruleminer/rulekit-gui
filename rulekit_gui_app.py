@@ -141,7 +141,7 @@ def define_prefered_induction(expert_rules = []):
 
 def define_params_class():
     
-    on_expert = st.toggle('Do you want to performe expert induction?', value=False)
+    on_expert = st.toggle('Do you want to perform expert induction?', value=False)
 
     metric = metric_selection()
     param = common_params()
@@ -214,7 +214,7 @@ def define_params_class():
     
 def define_param_reg():
     
-    on_expert = st.toggle('Do you want to performe expert induction?', value=False)
+    on_expert = st.toggle('Do you want to perform expert induction?', value=False)
 
     metric = metric_selection()
     param = common_params()
@@ -281,7 +281,7 @@ def define_param_reg():
     return clf, metric["ind_cluss"], on_expert
 
 def define_param_surv():
-    on_expert = st.toggle('Do you want to performe expert induction?', value=False)
+    on_expert = st.toggle('Do you want to perform expert induction?', value=False)
 
     param = common_params()
 
