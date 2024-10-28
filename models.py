@@ -12,14 +12,14 @@ from induction_params import get_classification_params
 from induction_params import get_common_params
 from induction_params import get_common_params_expert
 from induction_params import get_regression_params
-from metrics import get_metrics_selection_dict
+from metrics import get_measures_selection_dict
 
 
 def define_model_classification():
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
-    metric = get_metrics_selection_dict()
+    metric = get_measures_selection_dict()
     param = get_common_params()
     class_param = get_classification_params()
 
@@ -84,7 +84,7 @@ def define_model_regression():
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
-    metric = get_metrics_selection_dict()
+    metric = get_measures_selection_dict()
     param = get_common_params()
     reg_param = get_regression_params()
 

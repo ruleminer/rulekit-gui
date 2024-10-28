@@ -3,7 +3,7 @@ import streamlit as st
 from const import MEASURE_SELECTION
 
 
-def get_metrics_selection_dict():
+def get_measures_selection_dict():
     met_ind_cluss = st.selectbox(
         "Induction measure", MEASURE_SELECTION, index=6)
     ind_cluss = MEASURE_SELECTION.Desc[MEASURE_SELECTION["Metric"]

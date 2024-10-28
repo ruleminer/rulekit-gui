@@ -11,11 +11,11 @@ from sklearn.model_selection import train_test_split
 from click_actions import on_click_button_rule
 from click_actions import on_click_gn
 from const import MEASURE_SELECTION
-from gui_functions import get_prediction_metrics
-from gui_functions import get_regression_metrics
-from gui_functions import get_ruleset_stats_class
-from gui_functions import get_ruleset_stats_reg
-from gui_functions import get_ruleset_stats_surv
+from evaluation import get_prediction_metrics
+from evaluation import get_regression_metrics
+from evaluation import get_ruleset_stats_class
+from evaluation import get_ruleset_stats_reg
+from evaluation import get_ruleset_stats_surv
 from helpers import load_data
 from listener import MyProgressListener
 from models import define_model_classification
