@@ -1,16 +1,17 @@
 import math
-from sklearn import metrics
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from sklearn import metrics
 
 
 def get_prediction_metrics(measure: str, y_pred, y_true, classification_metrics: dict) -> tuple[pd.DataFrame, np.ndarray]:
     confusion_matrix = metrics.confusion_matrix(y_true, y_pred)
     tn, fp, fn, tp = confusion_matrix.ravel()
-    sensitivity = tp  / (tp + fn)
-    specificity = tn  / (tn + fp)
-    npv = tn  / (tn + fn)
-    ppv = tp  / (tp + fp)
+    sensitivity = tp / (tp + fn)
+    specificity = tn / (tn + fp)
+    npv = tn / (tn + fn)
+    ppv = tp / (tp + fp)
 
     dictionary = {
         'Measure': measure,
@@ -25,7 +26,7 @@ def get_prediction_metrics(measure: str, y_pred, y_true, classification_metrics:
         'NPV': npv,
         'PPV': ppv,
         'psep': ppv + npv - 1,
-        'Fall-out': fp  / (fp + tn),
+        'Fall-out': fp / (fp + tn),
         "Youden's J statistic": sensitivity + specificity - 1,
         'Lift': (tp / (tp + fp)) / ((tp + fn) / (tp + tn + fp + fn)),
         'F-measure': 2 * tp / (2 * tp + fp + fn),
@@ -42,10 +43,9 @@ def get_prediction_metrics(measure: str, y_pred, y_true, classification_metrics:
     }
     return pd.DataFrame.from_records([dictionary], index='Measure'), confusion_matrix
 
+
 def get_ruleset_stats_class(measure: str, model) -> pd.DataFrame:
     return pd.DataFrame.from_records([{'Measure': measure, **model.stats.__dict__}], index='Measure')
-
-
 
 
 def get_regression_metrics(measure: str, y_pred, y_true) -> pd.DataFrame:
@@ -61,8 +61,10 @@ def get_regression_metrics(measure: str, y_pred, y_true) -> pd.DataFrame:
         predicted = y_pred[i]
 
         relative_error += abs((true - predicted) / true)
-        squared_relative_error += abs((true - predicted) / true) * abs((true - predicted) / true)
-        relative_error_lenient += abs((true - predicted) / max(true, predicted))
+        squared_relative_error += abs((true - predicted) / true) * \
+            abs((true - predicted) / true)
+        relative_error_lenient += abs((true -
+                                      predicted) / max(true, predicted))
         relative_error_strict += abs((true - predicted) / min(true, predicted))
         nae_denominator += abs(avg - true)
     relative_error /= len(y_pred)
@@ -87,12 +89,11 @@ def get_regression_metrics(measure: str, y_pred, y_true) -> pd.DataFrame:
     }
     return pd.DataFrame.from_records([dictionary], index='Measure')
 
+
 def get_ruleset_stats_reg(measure: str, model) -> pd.DataFrame:
     tmp = model.parameters.__dict__
     del tmp['_java_object']
     return pd.DataFrame.from_records([{'Measure': measure, **tmp, **model.stats.__dict__}], index='Measure')
-
-
 
 
 def get_ruleset_stats_surv(model) -> pd.DataFrame:
