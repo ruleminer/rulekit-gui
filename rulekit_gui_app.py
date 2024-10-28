@@ -8,6 +8,8 @@ from rulekit.survival import SurvivalRules
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 
+from click_actions import on_click_button_rule
+from click_actions import on_click_gn
 from const import MEASURE_SELECTION
 from gui_functions import get_prediction_metrics
 from gui_functions import get_regression_metrics
@@ -98,16 +100,8 @@ if st.session_state.data:
         st.write("")
 
         # Definition of the rule induction parameters #
-        # Function that change the state of session variable as response to the button click (Button - Define the induction parameters)
-
-        def click_button_rule():
-            st.session_state.button_rule = not st.session_state.button_rule
-            st.session_state.gn = False
-            st.session_state.click_stop = False
-            st.session_state.prev_progress = 0
-
         st.button('Define the induction parameters',
-                  on_click=click_button_rule)
+                  on_click=on_click_button_rule)
 
         if not st.session_state.button_rule:
             st.write("")
@@ -145,14 +139,7 @@ if st.session_state.data:
             elif eval_type == "Cross Validation":
                 skf = StratifiedKFold(n_splits=nfold)
 
-        # Function that change the state of session variables as response to the button click (Button - Generate Rules) #
-
-        def click_gn():
-            st.session_state.prev_progress = 0
-            st.session_state.gn = True
-            st.session_state.click_stop = False
-
-        st.button('Generate Rules', on_click=click_gn)
+        st.button('Generate Rules', on_click=on_click_gn)
 
         # Condition if dataset was loaded and the button was clicked #
         if st.session_state.gn and st.session_state.button_rule:
@@ -160,12 +147,6 @@ if st.session_state.data:
             # Model training process for "only training" and "training and testing - hold out" evaluation types #
             if eval_type == "Only training" or eval_type == "Training and testing - Hold out":
                 nfold = 1
-                # Function that change the state of session variable as response to the button click (Button - Stop).
-                # That button doesn't work at this moment, but still it is visible for user.#
-
-                def click_stop():
-                    st.session_state.click_stop = True
-                    st.session_state.gn = True
 
                 # Definition of progress bar, stop button and placeholder -
                 # this must be defined outside the class that follows the progress of rule induction #
