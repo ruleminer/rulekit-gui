@@ -1,10 +1,6 @@
 import numpy as np
 import pandas as pd
 import streamlit as st
-from rulekit.classification import ExpertRuleClassifier
-from rulekit.classification import RuleClassifier
-from rulekit.survival import ExpertSurvivalRules
-from rulekit.survival import SurvivalRules
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 
@@ -13,6 +9,7 @@ from choices import EvaluationType
 from choices import ModelType
 from click_actions import on_click_button_rule
 from click_actions import on_click_gn
+from clone import clone_model
 from const import MEASURE_SELECTION
 from evaluation import get_prediction_metrics
 from evaluation import get_regression_metrics
@@ -201,20 +198,7 @@ if st.session_state.data:
                     x_train, x_test = x.iloc[train_index], x.iloc[test_index]
                     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-                    if genre == ModelType.CLASSIFICATION:
-                        if on_expert:
-                            model_clone = ExpertRuleClassifier(
-                                **entire_model.get_params())
-                        else:
-                            model_clone = RuleClassifier(
-                                **entire_model.get_params())
-                    elif genre == ModelType.SURVIVAL:
-                        if on_expert:
-                            model_clone = ExpertSurvivalRules(
-                                **entire_model.get_params())
-                        else:
-                            model_clone = SurvivalRules(
-                                **entire_model.get_params())
+                    model_clone = clone_model(clf)
 
                     model_clone.add_event_listener(MyProgressListener(
                         progress_bar, placeholder, eval_type))
