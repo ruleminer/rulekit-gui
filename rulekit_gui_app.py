@@ -11,16 +11,15 @@ from click_actions import on_click_button_rule
 from click_actions import on_click_gn
 from clone import clone_model
 from const import MEASURE_SELECTION
+from dataset import load_data
+from dataset import process_data
 from evaluation import get_prediction_metrics
 from evaluation import get_regression_metrics
 from evaluation import get_ruleset_stats_class
 from evaluation import get_ruleset_stats_reg
 from evaluation import get_ruleset_stats_surv
-from helpers import load_data
 from listener import MyProgressListener
-from models import define_model_classification
-from models import define_model_regression
-from models import define_model_survival
+from models import define_model
 from session import set_session_state
 from texts import DATASET_UPLOAD
 
@@ -67,35 +66,25 @@ if st.session_state.data:
         eval_type = st.radio(
             "Evaluation parameters", eval_choices, index=0)
 
-        # Definition of the independent variable and dependent variables #
-        if genre == ModelType.CLASSIFICATION:
-            x = data.drop(['target'], axis=1)
-            y = data['target'].astype('category')
-        elif genre == ModelType.REGRESSION:
-            x = data.drop(['target'], axis=1)
-            y = data['target']
-        else:
-            x = data.drop(['survival_status'], axis=1)
-            y = data['survival_status']
+        # Split the data into independent variables and dependent variable #
+        x, y = process_data(data, genre)
 
         # Evaluation parameters - next step #
         if eval_type == EvaluationType.TRAIN_TEST:
             per_div = st.number_input(
                 "Insert a percentage of the test set", value=0.20)
-
             if genre == ModelType.CLASSIFICATION:
                 div_type = DivType.STRATIFIED
             else:
                 div_type = st.radio(
                     "Hold out type", DivType.choices(), index=1)
-
         elif eval_type == EvaluationType.CROSS_VALIDATION:
             nfold = st.number_input("Insert a number of folds", value=5)
 
         st.write("")
 
         # Definition of the rule induction parameters #
-        st.button('Define the induction parameters',
+        st.button("Define the induction parameters",
                   on_click=on_click_button_rule)
 
         if not st.session_state.button_rule:
@@ -103,23 +92,15 @@ if st.session_state.data:
         else:
             st.write("")
             st.write("Algorithm parameters")
-
             # Definition of the model creation with the call of functions that allow the selection of parameters of the algorithm #
-            if genre == ModelType.CLASSIFICATION:
-                clf, metric, on_expert = define_model_classification()
-            elif genre == ModelType.REGRESSION:
-                clf, metric, on_expert = define_model_regression()
-            else:
-                clf, on_expert = define_model_survival()
+            clf, metric, on_expert = define_model(genre)
 
     with tab3:
-
         # Division of the dataset into training and testing sets depending on chosen evaluation type #
         if st.session_state.data:
             if eval_type == EvaluationType.ONLY_TRAINING:
                 x_train = x
                 y_train = y
-
             elif eval_type == EvaluationType.TRAIN_TEST:
                 if div_type == DivType.BY_ORDER:
                     x_train, x_test, y_train, y_test = train_test_split(
@@ -130,7 +111,6 @@ if st.session_state.data:
                 else:
                     x_train, x_test, y_train, y_test = train_test_split(
                         x, y, test_size=per_div, shuffle=True, stratify=y)
-
             else:
                 skf = StratifiedKFold(n_splits=nfold)
 
@@ -147,7 +127,7 @@ if st.session_state.data:
                 # this must be defined outside the class that follows the progress of rule induction #
                 progress = 0
                 progress_bar = st.progress(0)
-                # st.button('Stop', on_click=click_stop)
+                # st.button("Stop", on_click=click_stop)
                 # placeholder is used to update the table with rules during the rule induction process
                 placeholder = st.empty()
 
@@ -178,7 +158,6 @@ if st.session_state.data:
 
             # Model training process for EvaluationType.CROSS_VALIDATION evaluation type #
             else:
-
                 ruleset_stats = pd.DataFrame()
                 prediction_metrics = pd.DataFrame()
                 confusion_matrix_en = np.array([[0.0, 0.0], [0.0, 0.0]])
@@ -199,14 +178,12 @@ if st.session_state.data:
                     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
                     model_clone = clone_model(clf)
-
                     model_clone.add_event_listener(MyProgressListener(
                         progress_bar, placeholder, eval_type))
                     model_clone.fit(x_train, y_train)
                     ruleset = model_clone.model
 
                     # Obtaining the goodness of fit using a range of metrics - functions that were used are in the evaluation.py script. #
-
                     if genre == ModelType.CLASSIFICATION and st.session_state.button_rule:
                         measure = MEASURE_SELECTION.Metric[MEASURE_SELECTION.Desc == metric]
                         prediction, classification_metrics = model_clone.predict(
@@ -244,7 +221,6 @@ if st.session_state.data:
                 st.write("")
 
     with tab4:
-
         if st.session_state.data and st.session_state.button_rule and st.session_state.gn:
             # Obtaining the goodness of fit using a range of metrics - functions that were used are in the gui_function.py script. #
             # This is the same as in coss validation loop but for the EvaluationType.ONLY_TRAINING and EvaluationType.TRAIN_TEST evaluation types. #
@@ -323,7 +299,7 @@ if st.session_state.data:
                 elif genre == ModelType.SURVIVAL:
                     st.write("Average survival metrics")
                     st.write(
-                        f'Integrated Brier Score: {np.round(np.mean(survival_metrics), 6)}')
+                        f"Integrated Brier Score: {np.round(np.mean(survival_metrics), 6)}")
                     st.write("")
                     st.write("Average ruleset statistics")
                     st.table(ruleset_stats.mean())

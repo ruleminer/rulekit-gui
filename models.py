@@ -6,6 +6,7 @@ from rulekit.regression import RuleRegressor
 from rulekit.survival import ExpertSurvivalRules
 from rulekit.survival import SurvivalRules
 
+from choices import ModelType
 from expert_params import define_expert_preferred_extend
 from expert_params import define_expert_preferred_induction
 from induction_params import get_classification_params
@@ -15,7 +16,16 @@ from induction_params import get_regression_params
 from metrics import get_measures_selection_dict
 
 
-def define_model_classification():
+def define_model(model_type: ModelType):
+    if model_type == ModelType.CLASSIFICATION:
+        return _define_model_classification()
+    elif model_type == ModelType.REGRESSION:
+        return _define_model_regression()
+    elif model_type == ModelType.SURVIVAL:
+        return _define_model_survival()
+
+
+def _define_model_classification():
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
@@ -79,8 +89,7 @@ def define_model_classification():
     return clf, metric["ind_cluss"], on_expert
 
 
-def define_model_regression():
-
+def _define_model_regression():
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
@@ -138,7 +147,7 @@ def define_model_regression():
     return clf, metric["ind_cluss"], on_expert
 
 
-def define_model_survival():
+def _define_model_survival():
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
@@ -185,7 +194,7 @@ def define_model_survival():
 
         _update_expert_params_in_session(expert_params)
 
-    return clf, on_expert
+    return clf, None, on_expert
 
 
 def _update_expert_params_in_session(expert_params):
