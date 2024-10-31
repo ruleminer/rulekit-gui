@@ -22,21 +22,22 @@ from models import define_model
 from session import set_session_state
 from texts import DATASET_UPLOAD
 
+
 # Initialize the website and tabs
 st.set_page_config(page_title="RuleKit", initial_sidebar_state="expanded")
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
+
 # Define session variables - they do not reset when the stop button is pressed.
 set_session_state(st.session_state)
+
 
 # Load a dataset that complies with the given conditions and in .csv format.
 with tab1:
     st.title("Dataset")
     with st.container(border=True):
         st.write(DATASET_UPLOAD)
-
     uploaded_file = st.file_uploader("File uploader")
-
     if uploaded_file is None:
         st.session_state.data = False
         st.write("")
@@ -50,7 +51,7 @@ if st.session_state.data:
         st.title("Model and Parameters")
 
         # Model type #
-        genre = st.radio(
+        model_type = st.radio(
             "Model type",
             ModelType.choices(),
             index=0,
@@ -59,19 +60,19 @@ if st.session_state.data:
 
         # Evaluation type
         eval_choices = EvaluationType.choices()
-        if genre == ModelType.REGRESSION:
+        if model_type == ModelType.REGRESSION:
             eval_choices.remove(EvaluationType.CROSS_VALIDATION)
         eval_type = st.radio(
             "Evaluation parameters", eval_choices, index=0)
 
         # Split the data into independent variables and dependent variable
-        x, y = process_data(data, genre)
+        x, y = process_data(data, model_type)
 
         # Define dataset split type #
         if eval_type == EvaluationType.TRAIN_TEST:
             per_div = st.number_input(
                 "Insert a percentage of the test set", value=0.20)
-            if genre == ModelType.CLASSIFICATION:
+            if model_type == ModelType.CLASSIFICATION:
                 div_type = DivType.STRATIFIED
             else:
                 div_type = st.radio(
@@ -80,7 +81,6 @@ if st.session_state.data:
             nfold = st.number_input("Insert a number of folds", value=5)
 
         st.write("")
-
         st.button("Define the induction parameters",
                   on_click=on_click_button_rule)
 
@@ -90,7 +90,7 @@ if st.session_state.data:
         else:
             st.write("")
             st.write("Algorithm parameters")
-            clf, metric, on_expert = define_model(genre)
+            clf, metric, on_expert = define_model(model_type)
 
     with tab3:
         # Split the dataset according to settings
@@ -108,6 +108,7 @@ if st.session_state.data:
             else:
                 skf = StratifiedKFold(n_splits=nfold)
 
+        # Initialize rule generation
         st.button("Generate Rules", on_click=on_click_gn)
 
         # Proceed if the data has been loaded and rule generation has been initiated
@@ -169,7 +170,7 @@ if st.session_state.data:
                     model_clone.fit(x_train, y_train)
                     listener.finish()
 
-                    # Obtaining the goodness of fit using a range of metrics - functions that were used are in the evaluation.py script.
+                    # Calculate ruleset statistics and prediction indicators for CV iteration
                     ruleset = ruleset_factory(clf, x_train, y_train)
                     iter_ruleset_stats = calculate_ruleset_stats(
                         ruleset, x_test, y_test)
@@ -178,7 +179,7 @@ if st.session_state.data:
                     ruleset_stats.append(iter_ruleset_stats)
                     prediction_indicators.append(iter_prediction_indicators)
 
-                if genre == ModelType.CLASSIFICATION:
+                if model_type == ModelType.CLASSIFICATION:
                     confusion_matrices = [indicators.pop(
                         "Confusion matrix") for indicators in prediction_indicators]
                 ruleset_stats = pd.DataFrame(ruleset_stats)
@@ -196,13 +197,13 @@ if st.session_state.data:
 
     with tab4:
         if st.session_state.data and st.session_state.button_rule and st.session_state.gn:
+            # Display statistics and indicators
             if eval_type == EvaluationType.CROSS_VALIDATION:
-                # Displaying the average ruleset statistics and prediction metrics based on cross validation. #
                 st.write("Average ruleset statistics")
                 ruleset_stats = get_mean_table(ruleset_stats)
                 st.table(ruleset_stats)
                 st.write("")
-                if genre == ModelType.CLASSIFICATION:
+                if model_type == ModelType.CLASSIFICATION:
                     confusion_matrix = get_mean_confusion_matrix(
                         confusion_matrices)
                     st.write("Average confusion matrix")
@@ -214,7 +215,7 @@ if st.session_state.data:
             else:
                 st.write("Ruleset statistics")
                 st.table(ruleset_stats)
-                if genre == ModelType.CLASSIFICATION:
+                if model_type == ModelType.CLASSIFICATION:
                     confusion_matrix = prediction_indicators.pop(
                         "Confusion matrix")
                     st.write("Confusion matrix")
