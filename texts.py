@@ -4,5 +4,6 @@ In order to make the application work, your dataset must be properly prepared:
 - UTF-8 encoding, the field separator is a comma, while the decimal is a period,
 - missing values are represented as an empty character,
 - the first line of the loaded file is the column names,
-- the decision attribute must be named target in classification and regression, while for survival - survival_time and survival_status.
+- the decision attribute must be named `target` in classification and regression, while for survival - `survival_time` and `survival_status`,
+- in survival, `survival_status` must be a binary variable, with values {0, 1}.
 """
