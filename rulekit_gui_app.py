@@ -23,15 +23,14 @@ from models import define_model
 from session import set_session_state
 from texts import DATASET_UPLOAD
 
+# Initialize the website and tabs
 st.set_page_config(page_title="RuleKit", initial_sidebar_state="expanded")
-
-###   the beginning of the proper application code  ###
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
-## Defining session variables - they do not reset when the stop button is pressed. ##
+# Define session variables - they do not reset when the stop button is pressed.
 set_session_state(st.session_state)
 
-## Load a dataset that complies with the given conditions and in .csv format. ##
+# Load a dataset that complies with the given conditions and in .csv format.
 with tab1:
     st.title("Dataset")
     with st.container(border=True):
@@ -46,7 +45,7 @@ with tab1:
         data = load_data(uploaded_file)
 
 
-## If the data has been loaded then here are the defined objects to specify the model and its parameters ##
+# If the data has been loaded then here are the defined objects to specify the model and its parameters
 if st.session_state.data:
     with tab2:
         st.title("Model and Parameters")
@@ -59,17 +58,17 @@ if st.session_state.data:
         )
         st.write("")
 
-        # Evaluation type #
+        # Evaluation type
         eval_choices = EvaluationType.choices()
         if genre == ModelType.REGRESSION:
             eval_choices.remove(EvaluationType.CROSS_VALIDATION)
         eval_type = st.radio(
             "Evaluation parameters", eval_choices, index=0)
 
-        # Split the data into independent variables and dependent variable #
+        # Split the data into independent variables and dependent variable
         x, y = process_data(data, genre)
 
-        # Evaluation parameters - next step #
+        # Define dataset split type #
         if eval_type == EvaluationType.TRAIN_TEST:
             per_div = st.number_input(
                 "Insert a percentage of the test set", value=0.20)
@@ -83,58 +82,43 @@ if st.session_state.data:
 
         st.write("")
 
-        # Definition of the rule induction parameters #
         st.button("Define the induction parameters",
                   on_click=on_click_button_rule)
 
+        # Define model and specify its parameters #
         if not st.session_state.button_rule:
             st.write("")
         else:
             st.write("")
             st.write("Algorithm parameters")
-            # Definition of the model creation with the call of functions that allow the selection of parameters of the algorithm #
             clf, metric, on_expert = define_model(genre)
 
     with tab3:
-        # Division of the dataset into training and testing sets depending on chosen evaluation type #
+        # Split the dataset according to settings
         if st.session_state.data:
             if eval_type == EvaluationType.ONLY_TRAINING:
                 x_train = x
                 y_train = y
+                x_test = x_train
+                y_test = y_train
             elif eval_type == EvaluationType.TRAIN_TEST:
-                if div_type == DivType.BY_ORDER:
-                    x_train, x_test, y_train, y_test = train_test_split(
-                        x, y, test_size=per_div, shuffle=False)
-                elif div_type == DivType.RANDOM:
-                    x_train, x_test, y_train, y_test = train_test_split(
-                        x, y, test_size=per_div, shuffle=True)
-                else:
-                    x_train, x_test, y_train, y_test = train_test_split(
-                        x, y, test_size=per_div, shuffle=True, stratify=y)
+                shuffle = div_type in [DivType.RANDOM, DivType.STRATIFIED]
+                stratify = y if div_type == DivType.STRATIFIED else None
+                x_train, x_test, y_train, y_test = train_test_split(
+                    x, y, test_size=per_div, shuffle=shuffle, stratify=stratify)
             else:
                 skf = StratifiedKFold(n_splits=nfold)
 
         st.button("Generate Rules", on_click=on_click_gn)
 
-        # Condition if dataset was loaded and the button was clicked #
+        # Proceed if the data has been loaded and rule generation has been initiated
         if st.session_state.gn and st.session_state.button_rule:
-
             # Model training process for EvaluationType.ONLY_TRAINING and EvaluationType.TRAIN_TEST evaluation types #
             if eval_type == EvaluationType.ONLY_TRAINING or eval_type == EvaluationType.TRAIN_TEST:
                 nfold = 1
-
-                # Definition of progress bar, stop button and placeholder -
-                # this must be defined outside the class that follows the progress of rule induction #
                 progress = 0
-                progress_bar = st.progress(0)
-                # st.button("Stop", on_click=click_stop)
-                # placeholder is used to update the table with rules during the rule induction process
-                placeholder = st.empty()
-
-                # This is an exception to adding progress tracking for classification models.
-                # This is because for this case when the progress bar is uploading the training process doesn't work. We are still working on it. #
                 listener = MyProgressListener(
-                    progress_bar, placeholder, eval_type)
+                    eval_type)
                 clf.add_event_listener(listener)
 
                 # Model training process with updating progress bar and rule table #
@@ -146,15 +130,14 @@ if st.session_state.data:
                 else:
                     clf.fit(x_train, y_train)
 
-                progress_bar.progress(100)
-                progress_bar.empty()
+                listener.finish()
 
                 # Displaying the ruleset based on given model#
                 ruleset = clf.model
                 tmp = []
                 for rule in ruleset.rules:
                     tmp.append({"Rules": str(rule)})
-                placeholder.table(tmp)
+                listener.placeholder.table(tmp)
 
             # Model training process for EvaluationType.CROSS_VALIDATION evaluation type #
             else:
@@ -163,24 +146,26 @@ if st.session_state.data:
                 confusion_matrix_en = np.array([[0.0, 0.0], [0.0, 0.0]])
                 survival_metrics = []
 
+                listener = MyProgressListener(eval_type, nfold)
+                clf.add_event_listener(listener)
                 entire_model = clf.fit(x, y)
                 entire_ruleset = clf.model
+                listener.finish()
 
                 entire_ruleset_stats = []
                 for rule in entire_ruleset.rules:
                     entire_ruleset_stats.append({"Rules": str(rule)})
 
                 st.session_state_prev_progress = 0
-                progress_bar = st.progress(0)
-                placeholder = st.empty()
                 for train_index, test_index in skf.split(x, y):
                     x_train, x_test = x.iloc[train_index], x.iloc[test_index]
                     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
                     model_clone = clone_model(clf)
-                    model_clone.add_event_listener(MyProgressListener(
-                        progress_bar, placeholder, eval_type))
+
+                    model_clone.add_event_listener(listener)
                     model_clone.fit(x_train, y_train)
+                    listener.finish()
                     ruleset = model_clone.model
 
                     # Obtaining the goodness of fit using a range of metrics - functions that were used are in the evaluation.py script. #
@@ -203,9 +188,6 @@ if st.session_state.data:
                         ruleset_stats = pd.concat(
                             [ruleset_stats, get_ruleset_stats_surv(ruleset)])
 
-                progress_bar.progress(100)
-                progress_bar.empty()
-
                 ruleset_stats.index = [f"Fold {i}" for i in range(1, nfold+1)]
                 st.write("Ruleset statistics")
                 st.table(ruleset_stats)
@@ -216,7 +198,6 @@ if st.session_state.data:
         else:
             if uploaded_file is None:
                 st.write("")
-
             elif not st.session_state.button_rule:
                 st.write("")
 
