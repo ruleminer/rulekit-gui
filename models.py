@@ -39,20 +39,10 @@ def _define_model_classification():
         st.session_state.ind_exp_list = []
 
         clf = RuleClassifier(
-            induction_measure=metric["ind_cluss"],
-            pruning_measure=metric["prun_cluss"],
-            voting_measure=metric["vot_cluss"],
-            max_rule_count=param["max_rule_count"],
-            enable_pruning=param["enable_pruning"],
-            max_growing=param["mgrowing"],
-            minsupp_new=param["minsupp_new"],
-            max_uncovered_fraction=param["max_uncovered_fraction"],
-            ignore_missing=param['ignore_missing'],
-            select_best_candidate=param["select_best_candidate"],
-            complementary_conditions=param["complementary_conditions"],
-            control_apriori_precision=class_param["control_apriori_precision"],
-            approximate_bins_count=class_param["approximate_bins_count"],
-            approximate_induction=class_param["approximate_induction"])
+            **metric,
+            **param,
+            **class_param,
+        )
 
     else:
         st.text("")
@@ -60,33 +50,15 @@ def _define_model_classification():
         expert_params = get_common_params_expert()
 
         clf = ExpertRuleClassifier(
-            induction_measure=metric["ind_cluss"],
-            pruning_measure=metric["prun_cluss"],
-            voting_measure=metric["vot_cluss"],
-            max_rule_count=param["max_rule_count"],
-            enable_pruning=param["enable_pruning"],
-            max_growing=param["mgrowing"],
-            minsupp_new=param["minsupp_new"],
-            max_uncovered_fraction=param["max_uncovered_fraction"],
-            control_apriori_precision=class_param["control_apriori_precision"],
-            ignore_missing=param['ignore_missing'],
-            select_best_candidate=param["select_best_candidate"],
-            complementary_conditions=param["complementary_conditions"],
-            approximate_bins_count=class_param["approximate_bins_count"],
-            approximate_induction=class_param["approximate_induction"],
-            extend_using_preferred=expert_params["extend_using_preferred"],
-            extend_using_automatic=expert_params["extend_using_automatic"],
-            induce_using_preferred=expert_params["induce_using_preferred"],
-            induce_using_automatic=expert_params["induce_using_automatic"],
+            **metric,
+            **param,
+            **class_param,
             consider_other_classes=st.toggle(
                 "Consider other classes", value=False),
-            preferred_conditions_per_rule=expert_params["preferred_conditions_per_rule"],
-            preferred_attributes_per_rule=expert_params["preferred_attributes_per_rule"]
         )
-
         _update_expert_params_in_session(expert_params)
 
-    return clf, metric["ind_cluss"], on_expert
+    return clf, metric["induction_measure"], on_expert
 
 
 def _define_model_regression():
@@ -103,18 +75,10 @@ def _define_model_regression():
         st.session_state.ind_exp_list = []
 
         clf = RuleRegressor(
-            induction_measure=metric["ind_cluss"],
-            pruning_measure=metric["prun_cluss"],
-            voting_measure=metric["vot_cluss"],
-            max_rule_count=param["max_rule_count"],
-            enable_pruning=param["enable_pruning"],
-            max_growing=param["mgrowing"],
-            minsupp_new=param["minsupp_new"],
-            max_uncovered_fraction=param["max_uncovered_fraction"],
-            ignore_missing=param['ignore_missing'],
-            select_best_candidate=param["select_best_candidate"],
-            complementary_conditions=param["complementary_conditions"],
-            mean_based_regression=reg_param["mean_based_regression"])
+            **metric,
+            **param,
+            **reg_param,
+        )
 
     else:
         st.text("")
@@ -122,29 +86,15 @@ def _define_model_regression():
         expert_params = get_common_params_expert()
 
         clf = ExpertRuleRegressor(
-            induction_measure=metric["ind_cluss"],
-            pruning_measure=metric["prun_cluss"],
-            voting_measure=metric["vot_cluss"],
-            max_rule_count=param["max_rule_count"],
-            enable_pruning=param["enable_pruning"],
-            max_growing=param["mgrowing"],
-            minsupp_new=param["minsupp_new"],
-            max_uncovered_fraction=param["max_uncovered_fraction"],
-            ignore_missing=param['ignore_missing'],
-            select_best_candidate=param["select_best_candidate"],
-            complementary_conditions=param["complementary_conditions"],
-            mean_based_regression=reg_param["mean_based_regression"],
-            extend_using_preferred=expert_params["extend_using_preferred"],
-            extend_using_automatic=expert_params["extend_using_automatic"],
-            induce_using_preferred=expert_params["induce_using_preferred"],
-            induce_using_automatic=expert_params["induce_using_automatic"],
-            preferred_conditions_per_rule=expert_params["preferred_conditions_per_rule"],
-            preferred_attributes_per_rule=expert_params["preferred_attributes_per_rule"]
+            **metric,
+            **param,
+            **reg_param,
+            **expert_params,
         )
 
         _update_expert_params_in_session(expert_params)
 
-    return clf, metric["ind_cluss"], on_expert
+    return clf, metric["induction_measure"], on_expert
 
 
 def _define_model_survival():
@@ -152,6 +102,7 @@ def _define_model_survival():
         'Do you want to perform expert induction?', value=False)
 
     param = get_common_params()
+    param.pop("voting_measure", None)
 
     if not on_expert:
         st.session_state.pref_list = []
@@ -160,14 +111,8 @@ def _define_model_survival():
 
         clf = SurvivalRules(
             survival_time_attr='survival_time',
-            max_rule_count=param["max_rule_count"],
-            enable_pruning=param["enable_pruning"],
-            max_growing=param["mgrowing"],
-            minsupp_new=param["minsupp_new"],
-            max_uncovered_fraction=param["max_uncovered_fraction"],
-            ignore_missing=param['ignore_missing'],
-            select_best_candidate=param["select_best_candidate"],
-            complementary_conditions=param["complementary_conditions"])
+            **param,
+        )
 
     else:
         st.text("")
@@ -176,20 +121,8 @@ def _define_model_survival():
 
         clf = ExpertSurvivalRules(
             survival_time_attr='survival_time',
-            max_rule_count=param["max_rule_count"],
-            enable_pruning=param["enable_pruning"],
-            max_growing=param["mgrowing"],
-            minsupp_new=param["minsupp_new"],
-            max_uncovered_fraction=param["max_uncovered_fraction"],
-            ignore_missing=param['ignore_missing'],
-            select_best_candidate=param["select_best_candidate"],
-            complementary_conditions=param["complementary_conditions"],
-            extend_using_preferred=expert_params["extend_using_preferred"],
-            extend_using_automatic=expert_params["extend_using_automatic"],
-            induce_using_preferred=expert_params["induce_using_preferred"],
-            induce_using_automatic=expert_params["induce_using_automatic"],
-            preferred_conditions_per_rule=expert_params["preferred_conditions_per_rule"],
-            preferred_attributes_per_rule=expert_params["preferred_attributes_per_rule"]
+            **param,
+            **expert_params,
         )
 
         _update_expert_params_in_session(expert_params)

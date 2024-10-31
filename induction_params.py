@@ -5,7 +5,7 @@ def get_common_params():
     dictionary = {
         "max_rule_count": st.number_input("Max rule count", min_value=0, value=0, format='%i'),
         "enable_pruning": st.toggle("Enable pruning", value=True),
-        "mgrowing": st.number_input("Max growing", min_value=0, value=0, format='%i'),
+        "max_growing": st.number_input("Max growing", min_value=0, value=0, format='%i'),
         "minsupp_new": st.number_input("Minimum number of previously uncovered examples", min_value=0, value=5, format='%i'),
         "max_uncovered_fraction": st.number_input("Maximum fraction of uncovered examples", min_value=0.0, value=0.0, max_value=1.0, format='%f'),
         "ignore_missing": st.toggle("Ignore missing values", value=False),

@@ -12,7 +12,6 @@ from choices import EvaluationType
 from choices import ModelType
 from click_actions import on_click_button_rule
 from click_actions import on_click_gn
-from clone import clone_model
 from dataset import load_data
 from dataset import process_data
 from helpers import get_mean_confusion_matrix
@@ -164,10 +163,7 @@ if st.session_state.data:
                     x_train, x_test = x.iloc[train_index], x.iloc[test_index]
                     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-                    model_clone = clone_model(clf)
-
-                    model_clone.add_event_listener(listener)
-                    model_clone.fit(x_train, y_train)
+                    clf.fit(x_train, y_train)
                     listener.finish()
 
                     # Calculate ruleset statistics and prediction indicators for CV iteration

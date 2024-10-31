@@ -18,8 +18,8 @@ def get_measures_selection_dict():
     vot_cluss = MEASURE_SELECTION.Desc[MEASURE_SELECTION["Metric"]
                                        == met_vot_cluss].values[0]
 
-    dictionary = {"ind_cluss": ind_cluss,
-                  "prun_cluss": prun_cluss,
-                  "vot_cluss": vot_cluss, }
+    dictionary = {"induction_measure": ind_cluss,
+                  "pruning_measure": prun_cluss,
+                  "voting_measure": vot_cluss, }
 
     return dictionary
