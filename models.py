@@ -26,12 +26,12 @@ def define_model(model_type: ModelType):
 
 
 def _define_model_classification():
-    on_expert = st.toggle(
-        'Do you want to perform expert induction?', value=False)
-
     metric = get_measures_selection_dict()
     param = get_common_params()
     class_param = get_classification_params()
+
+    on_expert = st.toggle(
+        'Do you want to perform expert induction?', value=False)
 
     if not on_expert:
         st.session_state.pref_list = []
@@ -62,12 +62,12 @@ def _define_model_classification():
 
 
 def _define_model_regression():
-    on_expert = st.toggle(
-        'Do you want to perform expert induction?', value=False)
-
     metric = get_measures_selection_dict()
     param = get_common_params()
     reg_param = get_regression_params()
+
+    on_expert = st.toggle(
+        'Do you want to perform expert induction?', value=False)
 
     if not on_expert:
         st.session_state.pref_list = []
@@ -98,11 +98,10 @@ def _define_model_regression():
 
 
 def _define_model_survival():
+    param = get_common_params()
+
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
-
-    param = get_common_params()
-    param.pop("voting_measure", None)
 
     if not on_expert:
         st.session_state.pref_list = []
