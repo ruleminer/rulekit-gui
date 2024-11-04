@@ -14,16 +14,17 @@ def define_expert_preferred_extend(expert_preferred_conditions=None, expert_forb
         expert_forbidden_conditions.append(tmp)
 
     st.write("")
-    st.write("Preferred rules")
+    st.write("Preferred conditions/attributes")
     col1, col2, col3 = st.columns([3, 2, 5])
     with col1:
         type_pref = st.selectbox(
-            "Insert type of conditions", ('attribute', 'condition'), key="type_pref")
+            "Insert type", ('attribute', 'condition'), key="type_pref")
     with col2:
         num_pref = st.number_input(
-            "Insert rule number", min_value=1, value=1, format='%i', key="num_pref")
+            "Insert number", min_value=1, value=1, format='%i', key="num_pref")
     with col3:
-        pref = st.text_input("Insert expert rules", value="", key="pref_txt")
+        pref = st.text_input(
+            "Insert preferred condition/attribute", value="", key="pref_txt")
 
     if pref != "" and pref != st.session_state["pref"]:
         add_pref(type_pref, num_pref, pref)
@@ -32,16 +33,16 @@ def define_expert_preferred_extend(expert_preferred_conditions=None, expert_forb
         expert_preferred_conditions, num_rows="dynamic", width=1500, key="df1")
 
     st.write("")
-    st.write("Forbidden rules")
+    st.write("Forbidden conditions/attributes")
     col1_forb, col2_forb, col3_forb = st.columns([3, 2, 5])
     with col1_forb:
         type_forb = st.selectbox(
-            "Insert type of conditions", ('attribute', 'condition'), key="type_forb")
+            "Insert type", ('attribute', 'condition'), key="type_forb")
     with col2_forb:
         num_forb = st.number_input(
-            "Insert rule number", min_value=1, value=1, format='%i', key="num_forb")
+            "Insert number", min_value=1, value=1, format='%i', key="num_forb")
     with col3_forb:
-        forb = st.text_input("Insert forbidden conditions",
+        forb = st.text_input("Insert forbidden condition/attribute",
                              value="", key="forb_txt")
 
     if forb != "" and forb != st.session_state["forb"]:
@@ -65,9 +66,9 @@ def define_expert_preferred_induction(expert_rules=None):
     col1, col2 = st.columns([2, 5])
     with col1:
         num_exp = st.number_input(
-            "Insert rule number", min_value=1, value=1, format='%i')
+            "Insert number", min_value=1, value=1, format='%i')
     with col2:
-        ind_exp = st.text_input("Insert expert rules", value="")
+        ind_exp = st.text_input("Insert expert rule", value="")
 
     if ind_exp != "" and ind_exp != st.session_state["ind_exp"]:
         add_expert_rule(num_exp, ind_exp)
