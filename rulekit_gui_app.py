@@ -14,6 +14,7 @@ from click_actions import on_click_button_rule
 from click_actions import on_click_gn
 from dataset import load_data
 from dataset import process_data
+from helpers import format_table
 from helpers import get_mean_confusion_matrix
 from helpers import get_mean_table
 from listener import MyProgressListener
@@ -64,9 +65,6 @@ if st.session_state.data:
         eval_type = st.radio(
             "Evaluation parameters", eval_choices, index=0)
 
-        # Split the data into independent variables and dependent variable
-        x, y = process_data(data, model_type)
-
         # Define dataset split type #
         if eval_type == EvaluationType.TRAIN_TEST:
             per_div = st.number_input(
@@ -92,6 +90,9 @@ if st.session_state.data:
             clf, metric, on_expert = define_model(model_type)
 
     with tab3:
+        # Split the data into independent variables and dependent variable
+        if st.session_state.data:
+            x, y = process_data(data, model_type)
         # Split the dataset according to settings
         if st.session_state.data:
             if eval_type == EvaluationType.ONLY_TRAINING:
@@ -107,8 +108,8 @@ if st.session_state.data:
             else:
                 skf = StratifiedKFold(n_splits=nfold)
 
-        # Initialize rule generation
-        st.button("Generate Rules", on_click=on_click_gn)
+            # Initialize rule generation
+            st.button("Generate Rules", on_click=on_click_gn)
 
         # Proceed if the data has been loaded and rule generation has been initiated
         if st.session_state.gn and st.session_state.button_rule:
@@ -154,9 +155,9 @@ if st.session_state.data:
                 entire_model = clf.fit(x, y)
                 listener.finish()
 
-                entire_ruleset_stats = []
+                entire_model_rules = []
                 for rule in clf.model.rules:
-                    entire_ruleset_stats.append({"Rules": str(rule)})
+                    entire_model_rules.append({"Rules": str(rule)})
 
                 st.session_state_prev_progress = 0
                 for train_index, test_index in skf.split(x, y):
@@ -183,7 +184,7 @@ if st.session_state.data:
                 st.write("Ruleset statistics")
                 st.table(ruleset_stats)
                 st.write("Rules for entire model")
-                st.table(entire_ruleset_stats)
+                st.table(entire_model_rules)
 
         else:
             if uploaded_file is None:
@@ -193,30 +194,25 @@ if st.session_state.data:
 
     with tab4:
         if st.session_state.data and st.session_state.button_rule and st.session_state.gn:
-            # Display statistics and indicators
+            # Format and display statistics and indicators
             if eval_type == EvaluationType.CROSS_VALIDATION:
-                st.write("Average ruleset statistics")
                 ruleset_stats = get_mean_table(ruleset_stats)
-                st.table(ruleset_stats)
-                st.write("")
                 if model_type == ModelType.CLASSIFICATION:
                     confusion_matrix = get_mean_confusion_matrix(
                         confusion_matrices)
-                    st.write("Average confusion matrix")
-                    st.table(pd.DataFrame(confusion_matrix))
-                    st.write("")
-                st.write("Average prediction indicators")
                 prediction_indicators = get_mean_table(prediction_indicators)
-                st.table(prediction_indicators)
             else:
-                st.write("Ruleset statistics")
-                st.table(ruleset_stats)
+                ruleset_stats = format_table(ruleset_stats)
                 if model_type == ModelType.CLASSIFICATION:
                     confusion_matrix = prediction_indicators.pop(
                         "Confusion matrix")
-                    st.write("Confusion matrix")
-                    st.table(pd.DataFrame(
-                        confusion_matrix).set_index("classes"))
-                    st.write("")
-                st.write("Prediction indicators")
-                st.table(prediction_indicators)
+                    confusion_matrix = pd.DataFrame(
+                        confusion_matrix).set_index("classes")
+                prediction_indicators = format_table(prediction_indicators)
+            st.write("Ruleset statistics")
+            st.table(ruleset_stats)
+            if model_type == ModelType.CLASSIFICATION:
+                st.write("Confusion matrix")
+                st.table(confusion_matrix)
+            st.write("Prediction indicators")
+            st.table(prediction_indicators)

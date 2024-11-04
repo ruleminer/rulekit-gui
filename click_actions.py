@@ -8,11 +8,6 @@ def on_click_button_rule():
     st.session_state.prev_progress = 0
 
 
-def on_click_stop():
-    st.session_state.click_stop = True
-    st.session_state.gn = True
-
-
 def on_click_gn():
     st.session_state.prev_progress = 0
     st.session_state.gn = True
