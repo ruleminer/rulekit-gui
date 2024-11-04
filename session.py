@@ -11,6 +11,7 @@ DEFAULT_SESSION = {
     "button_rule": True,
     "rule": [],
     "data": False,
+    "ruleset_empty": False,
 }
 
 
