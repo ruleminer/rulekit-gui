@@ -24,7 +24,19 @@ from texts import DATASET_UPLOAD
 
 
 # Initialize the website and tabs
-st.set_page_config(page_title="RuleKit", initial_sidebar_state="expanded")
+st.set_page_config(page_title="RuleKit", initial_sidebar_state="collapsed")
+st.markdown("""
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+""", unsafe_allow_html=True)
+st.write("This is a demo. The fully functional application is available at www.ruleminer.ai")
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
 
