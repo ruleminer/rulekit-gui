@@ -21,7 +21,7 @@ from listener import MyProgressListener
 from models import define_model
 from session import set_session_state
 from texts import DATASET_UPLOAD
-
+from texts import DESCRIPTION
 
 # Initialize the website and tabs
 st.set_page_config(page_title="RuleKit", initial_sidebar_state="collapsed")
@@ -36,7 +36,8 @@ st.markdown("""
         #stDecoration {display:none;}
     </style>
 """, unsafe_allow_html=True)
-st.write("This is a demo. The fully functional application is available at www.ruleminer.ai")
+with st.container(border=True):
+    st.markdown(DESCRIPTION, unsafe_allow_html=True)
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
 
