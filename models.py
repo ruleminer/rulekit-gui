@@ -28,32 +28,28 @@ def _define_model_classification():
     metric = get_measures_selection_dict()
     param = get_common_params()
     class_param = get_classification_params()
-
+    st.text("")
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
     if not on_expert:
-        st.session_state.pref_list = []
-        st.session_state.forb_list = []
-        st.session_state.expert_rules_list = []
         clf = RuleClassifier(
             **metric,
             **param,
             **class_param,
         )
     else:
-        st.text("")
         st.write("Expert induction parameters")
         expert_params = get_common_expert_params()
         expert_params["consider_other_classes"] = st.toggle(
             "Induce rules for the remaining classes", value=False)
+        define_fit_expert_params()
         clf = ExpertRuleClassifier(
             **metric,
             **param,
             **class_param,
             **expert_params,
         )
-        define_fit_expert_params()
 
     return clf, metric["induction_measure"], on_expert
 
@@ -62,57 +58,49 @@ def _define_model_regression():
     metric = get_measures_selection_dict()
     param = get_common_params()
     reg_param = get_regression_params()
-
+    st.write("")
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
     if not on_expert:
-        st.session_state.pref_list = []
-        st.session_state.forb_list = []
-        st.session_state.expert_rules_list = []
         clf = RuleRegressor(
             **metric,
             **param,
             **reg_param,
         )
     else:
-        st.text("")
         st.write("Expert induction parameters")
         expert_params = get_common_expert_params()
+        define_fit_expert_params()
         clf = ExpertRuleRegressor(
             **metric,
             **param,
             **reg_param,
             **expert_params,
         )
-        define_fit_expert_params()
 
     return clf, metric["induction_measure"], on_expert
 
 
 def _define_model_survival():
     param = get_common_params()
-
+    st.text("")
     on_expert = st.toggle(
         'Do you want to perform expert induction?', value=False)
 
     if not on_expert:
-        st.session_state.pref_list = []
-        st.session_state.forb_list = []
-        st.session_state.expert_rules_list = []
         clf = SurvivalRules(
             survival_time_attr='survival_time',
             **param,
         )
     else:
-        st.text("")
         st.write("Expert induction parameters")
         expert_params = get_common_expert_params()
+        define_fit_expert_params()
         clf = ExpertSurvivalRules(
             survival_time_attr='survival_time',
             **param,
             **expert_params,
         )
-        define_fit_expert_params()
 
     return clf, None, on_expert

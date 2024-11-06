@@ -1,14 +1,18 @@
+import pandas as pd
+
+
 DEFAULT_SESSION = {
     "prev_progress": 0,
     "pref_list": [],
     "forb_list": [],
     "expert_rules_list": [],
-    "click_stop": False,
-    "gn": False,
-    "button_rule": True,
-    "rule": [],
     "data": False,
     "ruleset_empty": False,
+    "generation": False,
+    "generated_rules": pd.Series(name="Rules"),
+    "statistics": [],
+    "indicators": [],
+    "confusion_matrices": [],
 }
 
 

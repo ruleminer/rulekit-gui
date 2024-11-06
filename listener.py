@@ -1,5 +1,6 @@
 from typing import Optional
 
+import pandas as pd
 import streamlit as st
 from rulekit.events import RuleInductionProgressListener
 from rulekit.rules import Rule
@@ -14,10 +15,9 @@ class MyProgressListener(RuleInductionProgressListener):
         self.progress_bar = st.progress(0)
         self.placeholder = st.empty()
         self._uncovered_examples_count: Optional[int] = None
-        self._should_stop = False
         self._nruns = 0
         self._nfolds = nfolds
-        self.df = []
+        self.df = pd.Series(name="Rules")
         self.rule = 0
 
     def on_new_rule(self, rule: Rule):
@@ -42,17 +42,15 @@ class MyProgressListener(RuleInductionProgressListener):
             self.progress_bar.progress(progress, text=text)
             st.session_state.prev_progress = progress
 
-        self.df.append(self.rule)
+        self.df[len(self.df) + 1] = self.rule
 
         if self.eval_type != "Cross Validation":
             self.placeholder.table(self.df)
         self._uncovered_examples_count = uncovered_examples_count
 
-    def should_stop(self) -> bool:
-        return self._should_stop
-
     def finish(self):
         self.progress_bar.progress(100)
         self.progress_bar.empty()
         st.session_state.prev_progress = 0
+        self.placeholder.empty()
         self._nruns += 1

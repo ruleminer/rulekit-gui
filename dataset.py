@@ -6,7 +6,7 @@ from choices import ModelType
 
 def load_data(uploaded_file):
     data = pd.read_csv(uploaded_file)
-    st.data_editor(
+    data = st.data_editor(
         data, num_rows="dynamic", disabled=False, hide_index=True, width=1500)
     st.session_state.data = True
     return data
@@ -32,5 +32,5 @@ def process_data(data: pd.DataFrame, problem_type: ModelType):
     except KeyError:
         st.error(
             "The target column is not present in the dataset or a wrong model type was selected.")
-        st.session_state.data = False
-        return None, None
+        st.session_state.generation = False
+        st.stop()

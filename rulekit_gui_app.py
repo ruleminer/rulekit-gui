@@ -10,14 +10,12 @@ from sklearn.model_selection import train_test_split
 from choices import DivType
 from choices import EvaluationType
 from choices import ModelType
-from click_actions import on_click_button_rule
-from click_actions import on_click_gn
 from dataset import load_data
 from dataset import process_data
 from expert_params import parse_expert_params_to_fit
-from helpers import format_table
 from helpers import get_mean_confusion_matrix
 from helpers import get_mean_table
+from helpers import toggle_generation
 from listener import MyProgressListener
 from models import define_model
 from session import set_session_state
@@ -80,6 +78,7 @@ if st.session_state.data:
             "Evaluation parameters", eval_choices, index=0)
 
         # Define dataset split type
+        nfold = None
         if eval_type == EvaluationType.TRAIN_TEST:
             per_div = st.number_input(
                 "Insert a percentage of the test set", value=0.20)
@@ -92,23 +91,20 @@ if st.session_state.data:
             nfold = st.number_input("Insert a number of folds", value=5)
 
         st.write("")
-        st.button("Define the induction parameters",
-                  on_click=on_click_button_rule)
-
-        # Define model and specify its parameters
-        if not st.session_state.button_rule:
-            st.write("")
-        else:
-            st.write("")
-            st.write("Algorithm parameters")
-            clf, metric, on_expert = define_model(model_type)
+        st.write("Algorithm parameters")
+        clf, metric, on_expert = define_model(model_type)
 
     with tab3:
-        # Split the data into independent variables and dependent variable
-        if st.session_state.data:
+        # Proceed if the data has been loaded and rule generation has been initiated
+        if not st.session_state.generation:
+            st.button("Generate rules", on_click=toggle_generation)
+        listener = MyProgressListener(
+            eval_type, nfold)
+
+        if st.session_state.generation:
+            # Split the data into independent variables and dependent variable
             x, y = process_data(data, model_type)
-        # Split the dataset according to settings
-        if st.session_state.data:
+            # Split the dataset according to settings
             if eval_type == EvaluationType.ONLY_TRAINING:
                 x_train = x
                 y_train = y
@@ -122,17 +118,10 @@ if st.session_state.data:
             else:
                 skf = StratifiedKFold(n_splits=nfold)
 
-            # Initialize rule generation
-            st.button("Generate Rules", on_click=on_click_gn)
-
-        # Proceed if the data has been loaded and rule generation has been initiated
-        if st.session_state.gn and st.session_state.button_rule:
             # Model training process for EvaluationType.ONLY_TRAINING and EvaluationType.TRAIN_TEST evaluation types
             if eval_type == EvaluationType.ONLY_TRAINING or eval_type == EvaluationType.TRAIN_TEST:
                 nfold = 1
                 progress = 0
-                listener = MyProgressListener(
-                    eval_type)
                 clf.add_event_listener(listener)
 
                 # Model training process with updating progress bar and rule table
@@ -151,10 +140,9 @@ if st.session_state.data:
 
                 # Displaying the ruleset based on given model
                 ruleset = clf.model
-                tmp = []
                 for rule in clf.model.rules:
-                    tmp.append({"Rules": str(rule)})
-                listener.placeholder.table(tmp)
+                    st.session_state.generated_rules[len(
+                        st.session_state.generated_rules) + 1] = str(rule)
 
                 if clf.model.rules:
                     ruleset = ruleset_factory(clf, x_train, y_train)
@@ -162,20 +150,24 @@ if st.session_state.data:
                         ruleset, x_test, y_test)
                     prediction_indicators = calculate_prediction_indicators(
                         ruleset, x_test, y_test)
+                    if model_type == ModelType.CLASSIFICATION:
+                        confusion_matrix = prediction_indicators.pop(
+                            "Confusion matrix")
+                        st.session_state.confusion_matrices.append(
+                            confusion_matrix)
+                    st.session_state.statistics.append(ruleset_stats)
+                    st.session_state.indicators.append(prediction_indicators)
                     st.session_state.ruleset_empty = False
                 else:
-                    ruleset_stats = {}
-                    prediction_indicators = {}
+                    st.session_state.statistics = []
+                    st.session_state.indicators = []
+                    st.session_state.confusion_matrices = []
                     st.session_state.ruleset_empty = True
                     st.error(
                         "An empty ruleset was generated. Try changing the model settings.")
 
             # Model training process for EvaluationType.CROSS_VALIDATION evaluation type
             else:
-                ruleset_stats = []
-                prediction_indicators = []
-
-                listener = MyProgressListener(eval_type, nfold)
                 clf.add_event_listener(listener)
                 try:
                     if on_expert:
@@ -189,10 +181,10 @@ if st.session_state.data:
                     st.stop()
                 listener.finish()
 
-                entire_model_rules = []
                 if clf.model.rules:
                     for rule in clf.model.rules:
-                        entire_model_rules.append({"Rules": str(rule)})
+                        st.session_state.generated_rules[len(
+                            st.session_state.generated_rules) + 1] = str(rule)
                     st.session_state.ruleset_empty = False
                 else:
                     st.session_state.ruleset_empty = True
@@ -216,57 +208,48 @@ if st.session_state.data:
                         listener.finish()
 
                         # Calculate ruleset statistics and prediction indicators for CV iteration
-
                         ruleset = ruleset_factory(clf, x_train, y_train)
                         iter_ruleset_stats = calculate_ruleset_stats(
                             ruleset, x_test, y_test)
                         iter_prediction_indicators = calculate_prediction_indicators(
                             ruleset, x_test, y_test)
-                        ruleset_stats.append(iter_ruleset_stats)
-                        prediction_indicators.append(
+                        if model_type == ModelType.CLASSIFICATION:
+                            confusion_matrix = iter_prediction_indicators.pop(
+                                "Confusion matrix")
+                            st.session_state.confusion_matrices.append(
+                                confusion_matrix)
+                        st.session_state.statistics.append(iter_ruleset_stats)
+                        st.session_state.indicators.append(
                             iter_prediction_indicators)
 
-                    if model_type == ModelType.CLASSIFICATION:
-                        confusion_matrices = [indicators.pop(
-                            "Confusion matrix") for indicators in prediction_indicators]
-                    ruleset_stats = pd.DataFrame(ruleset_stats)
+                    ruleset_stats = pd.DataFrame(st.session_state.statistics)
                     ruleset_stats.index = [
                         f"Fold {i}" for i in range(1, nfold+1)]
                     st.write("Ruleset statistics")
                     st.table(ruleset_stats)
-                    st.write("Rules for entire model")
-                    st.table(entire_model_rules)
                 else:
                     st.error(
                         "An empty ruleset was generated. Try changing the model settings.")
 
-        else:
-            if uploaded_file is None:
-                st.write("")
-            elif not st.session_state.button_rule:
-                st.write("")
+            st.session_state.generation = False
+
+        if len(st.session_state.generated_rules) > 0:
+            if eval_type == EvaluationType.CROSS_VALIDATION:
+                st.write("Rules for entire model")
+                st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
+            else:
+                listener.placeholder.table(
+                    pd.Series(st.session_state.generated_rules, name="Rules"))
 
     with tab4:
-        if st.session_state.data and st.session_state.button_rule and st.session_state.gn and not st.session_state.ruleset_empty:
-            # Format and display statistics and indicators
-            if eval_type == EvaluationType.CROSS_VALIDATION:
-                ruleset_stats = get_mean_table(ruleset_stats)
-                if model_type == ModelType.CLASSIFICATION:
-                    confusion_matrix = get_mean_confusion_matrix(
-                        confusion_matrices)
-                prediction_indicators = get_mean_table(prediction_indicators)
-            else:
-                ruleset_stats = format_table(ruleset_stats)
-                if model_type == ModelType.CLASSIFICATION:
-                    confusion_matrix = prediction_indicators.pop(
-                        "Confusion matrix")
-                    confusion_matrix = pd.DataFrame(
-                        confusion_matrix).set_index("classes")
-                prediction_indicators = format_table(prediction_indicators)
+        if not st.session_state.ruleset_empty and st.session_state.statistics:
             st.write("Ruleset statistics")
+            ruleset_stats = get_mean_table(st.session_state.statistics)
             st.table(ruleset_stats)
-            if model_type == ModelType.CLASSIFICATION:
+            if model_type == ModelType.CLASSIFICATION and st.session_state.confusion_matrices:
                 st.write("Confusion matrix")
-                st.table(confusion_matrix)
+                st.table(get_mean_confusion_matrix(
+                    st.session_state.confusion_matrices))
             st.write("Prediction indicators")
+            prediction_indicators = get_mean_table(st.session_state.indicators)
             st.table(prediction_indicators)
