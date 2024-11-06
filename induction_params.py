@@ -15,18 +15,6 @@ def get_common_params():
     return dictionary
 
 
-def get_common_params_expert():
-    dictionary = {
-        "extend_using_preferred": st.toggle("Extend using preferred", value=False),
-        "extend_using_automatic": st.toggle("Extend using automatic", value=False),
-        "induce_using_preferred": st.toggle("Induce using preferred", value=False),
-        "induce_using_automatic": st.toggle("Induce using automatic", value=False),
-        "preferred_conditions_per_rule": st.number_input("Preferred conditions per rule", min_value=0, value=0, format='%i'),
-        "preferred_attributes_per_rule": st.number_input("Preferred attributes per rule", min_value=0, value=0, format='%i'),
-    }
-    return dictionary
-
-
 def get_classification_params():
     dictionary = {
         "control_apriori_precision": st.toggle("Control apriori precision", value=True),

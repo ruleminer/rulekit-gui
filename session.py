@@ -1,11 +1,8 @@
 DEFAULT_SESSION = {
     "prev_progress": 0,
-    "pref": "none",
     "pref_list": [],
-    "forb": "none",
     "forb_list": [],
-    "ind_exp": "none",
-    "ind_exp_list": [],
+    "expert_rules_list": [],
     "click_stop": False,
     "gn": False,
     "button_rule": True,

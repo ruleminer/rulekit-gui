@@ -1,78 +1,82 @@
 import streamlit as st
 
 
-def define_expert_preferred_extend(expert_preferred_conditions=None, expert_forbidden_conditions=None):
-    expert_preferred_conditions = expert_preferred_conditions or []
-    expert_forbidden_conditions = expert_forbidden_conditions or []
-
-    def add_pref(condition_type, num, rule):
-        tmp = ('preferred-' + condition_type + '-' + str(num - 1), rule)
-        expert_preferred_conditions.append(tmp)
-
-    def add_forb(condition_type, num, rule):
-        tmp = ('forbidden-' + condition_type + '-' + str(num - 1), rule)
-        expert_forbidden_conditions.append(tmp)
-
-    st.write("")
-    st.write("Preferred conditions/attributes")
-    col1, col2, col3 = st.columns([3, 2, 5])
-    with col1:
-        type_pref = st.selectbox(
-            "Insert type", ('attribute', 'condition'), key="type_pref")
-    with col2:
-        num_pref = st.number_input(
-            "Insert number", min_value=1, value=1, format='%i', key="num_pref")
-    with col3:
-        pref = st.text_input(
-            "Insert preferred condition/attribute", value="", key="pref_txt")
-
-    if pref != "" and pref != st.session_state["pref"]:
-        add_pref(type_pref, num_pref, pref)
-        st.session_state.pref = pref
-    expert_preferred_conditions = st.data_editor(
-        expert_preferred_conditions, num_rows="dynamic", width=1500, key="df1")
-
-    st.write("")
-    st.write("Forbidden conditions/attributes")
-    col1_forb, col2_forb, col3_forb = st.columns([3, 2, 5])
-    with col1_forb:
-        type_forb = st.selectbox(
-            "Insert type", ('attribute', 'condition'), key="type_forb")
-    with col2_forb:
-        num_forb = st.number_input(
-            "Insert number", min_value=1, value=1, format='%i', key="num_forb")
-    with col3_forb:
-        forb = st.text_input("Insert forbidden condition/attribute",
-                             value="", key="forb_txt")
-
-    if forb != "" and forb != st.session_state["forb"]:
-        add_forb(type_forb, num_forb, forb)
-        st.session_state.forb = forb
-    expert_forbidden_conditions = st.data_editor(
-        expert_forbidden_conditions, num_rows="dynamic", width=1500, key="forb_df")
-
-    return expert_preferred_conditions, expert_forbidden_conditions
+def get_common_expert_params():
+    dictionary = {
+        "extend_using_preferred": st.toggle("Add preferred conditions to existing rules", value=False),
+        "extend_using_automatic": st.toggle("Add conditions to existing rules automatically", value=False),
+        "induce_using_preferred": st.toggle("Allow induction of new rules that contain preferred conditions or are based on preferred attributes", value=False),
+        "induce_using_automatic": st.toggle("Allow induction of new rules in a fully automatic manner", value=False),
+        "preferred_conditions_per_rule": st.number_input("Maximum number of preferred conditions per rule", min_value=0, value=0, format='%i'),
+        "preferred_attributes_per_rule": st.number_input("Maximum number of conditions built based on preferred attributes per rule", min_value=0, value=0, format='%i'),
+    }
+    return dictionary
 
 
-def define_expert_preferred_induction(expert_rules=None):
+def parse_expert_params_to_fit():
+    expert_params = {
+        "expert_rules": [
+            (f"expert_rule-{i+1}", rule) for i, rule in enumerate(st.session_state.expert_rules_list)
+        ],
+        "expert_preferred_conditions": [
+            (f"preferred-{i+1}", f"1: {pref}") for i, pref in enumerate(st.session_state.pref_list)
+        ],
+        "expert_forbidden_conditions": [
+            (f"forbidden-{i+1}", forb) for i, forb in enumerate(st.session_state.forb_list)
+        ],
+    }
+    return expert_params
+
+
+def define_fit_expert_params():
+    st.session_state.expert_rules_list = _define_expert_rules(
+        st.session_state.expert_rules_list)
+    st.session_state.pref_list = _define_preferred_elements(
+        st.session_state.pref_list)
+    st.session_state.forb_list = _define_forbidden_elements(
+        st.session_state.forb_list)
+
+
+def _define_expert_rules(expert_rules=None):
     expert_rules = expert_rules or []
-
-    def add_expert_rule(num, rule):
-        tmp = ('rule-'+str(num-1), rule)
-        expert_rules.append(tmp)
 
     st.write("")
     st.write("Expert induction rules")
-    col1, col2 = st.columns([2, 5])
-    with col1:
-        num_exp = st.number_input(
-            "Insert number", min_value=1, value=1, format='%i')
-    with col2:
-        ind_exp = st.text_input("Insert expert rule", value="")
+    expert_rule = st.text_input("Insert expert rule", value="")
 
-    if ind_exp != "" and ind_exp != st.session_state["ind_exp"]:
-        add_expert_rule(num_exp, ind_exp)
-        st.session_state.ind_exp = ind_exp
-    expert_rules = st.data_editor(expert_rules, num_rows="dynamic", width=1500)
+    if expert_rule != "" and expert_rule not in expert_rules:
+        expert_rules.append(expert_rule)
+    expert_rules = st.data_editor(
+        expert_rules, num_rows="dynamic", width=1500, key="rules")
 
     return expert_rules
+
+
+def _define_preferred_elements(preferred_elements=None):
+    preferred_elements = preferred_elements or []
+
+    st.write("")
+    st.write("Preferred attributes/conditions")
+    pref_elem = st.text_input(
+        "Insert preferred attribute/condition", value="", key="pref_elem_txt")
+    if pref_elem != "" and pref_elem not in preferred_elements:
+        preferred_elements.append(pref_elem)
+    preferred_elements = st.data_editor(
+        preferred_elements, num_rows="dynamic", width=1500, key="pref_elem")
+
+    return preferred_elements
+
+
+def _define_forbidden_elements(forbidden_elements=None):
+    forbidden_elements = forbidden_elements or []
+
+    st.write("")
+    st.write("Forbidden attributes/conditions")
+    pref_elem = st.text_input(
+        "Insert forbidden attribute/condition", value="", key="forb_elem_txt")
+    if pref_elem != "" and pref_elem not in forbidden_elements:
+        forbidden_elements.append(pref_elem)
+    forbidden_elements = st.data_editor(
+        forbidden_elements, num_rows="dynamic", width=1500, key="forb_elem")
+
+    return forbidden_elements

@@ -7,11 +7,10 @@ from rulekit.survival import ExpertSurvivalRules
 from rulekit.survival import SurvivalRules
 
 from choices import ModelType
-from expert_params import define_expert_preferred_extend
-from expert_params import define_expert_preferred_induction
+from expert_params import define_fit_expert_params
+from expert_params import get_common_expert_params
 from induction_params import get_classification_params
 from induction_params import get_common_params
-from induction_params import get_common_params_expert
 from induction_params import get_regression_params
 from metrics import get_measures_selection_dict
 
@@ -36,27 +35,25 @@ def _define_model_classification():
     if not on_expert:
         st.session_state.pref_list = []
         st.session_state.forb_list = []
-        st.session_state.ind_exp_list = []
-
+        st.session_state.expert_rules_list = []
         clf = RuleClassifier(
             **metric,
             **param,
             **class_param,
         )
-
     else:
         st.text("")
         st.write("Expert induction parameters")
-        expert_params = get_common_params_expert()
-
+        expert_params = get_common_expert_params()
+        expert_params["consider_other_classes"] = st.toggle(
+            "Induce rules for the remaining classes", value=False)
         clf = ExpertRuleClassifier(
             **metric,
             **param,
             **class_param,
-            consider_other_classes=st.toggle(
-                "Consider other classes", value=False),
+            **expert_params,
         )
-        _update_expert_params_in_session(expert_params)
+        define_fit_expert_params()
 
     return clf, metric["induction_measure"], on_expert
 
@@ -72,27 +69,23 @@ def _define_model_regression():
     if not on_expert:
         st.session_state.pref_list = []
         st.session_state.forb_list = []
-        st.session_state.ind_exp_list = []
-
+        st.session_state.expert_rules_list = []
         clf = RuleRegressor(
             **metric,
             **param,
             **reg_param,
         )
-
     else:
         st.text("")
         st.write("Expert induction parameters")
-        expert_params = get_common_params_expert()
-
+        expert_params = get_common_expert_params()
         clf = ExpertRuleRegressor(
             **metric,
             **param,
             **reg_param,
             **expert_params,
         )
-
-        _update_expert_params_in_session(expert_params)
+        define_fit_expert_params()
 
     return clf, metric["induction_measure"], on_expert
 
@@ -106,39 +99,20 @@ def _define_model_survival():
     if not on_expert:
         st.session_state.pref_list = []
         st.session_state.forb_list = []
-        st.session_state.ind_exp_list = []
-
+        st.session_state.expert_rules_list = []
         clf = SurvivalRules(
             survival_time_attr='survival_time',
             **param,
         )
-
     else:
         st.text("")
         st.write("Expert induction parameters")
-        expert_params = get_common_params_expert()
-
+        expert_params = get_common_expert_params()
         clf = ExpertSurvivalRules(
             survival_time_attr='survival_time',
             **param,
             **expert_params,
         )
-
-        _update_expert_params_in_session(expert_params)
+        define_fit_expert_params()
 
     return clf, None, on_expert
-
-
-def _update_expert_params_in_session(expert_params):
-    if expert_params["extend_using_preferred"]:
-        st.session_state.pref_list, st.session_state.forb_list = define_expert_preferred_extend(
-            st.session_state.pref_list, st.session_state.forb_list)
-    else:
-        st.session_state.pref_list = []
-        st.session_state.forb_list = []
-
-    if expert_params["induce_using_preferred"]:
-        st.session_state.ind_exp_list = define_expert_preferred_induction(
-            st.session_state.ind_exp_list)
-    else:
-        st.session_state.ind_exp_list = []

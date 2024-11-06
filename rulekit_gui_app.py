@@ -14,6 +14,7 @@ from click_actions import on_click_button_rule
 from click_actions import on_click_gn
 from dataset import load_data
 from dataset import process_data
+from expert_params import parse_expert_params_to_fit
 from helpers import format_table
 from helpers import get_mean_confusion_matrix
 from helpers import get_mean_table
@@ -135,13 +136,16 @@ if st.session_state.data:
                 clf.add_event_listener(listener)
 
                 # Model training process with updating progress bar and rule table
-                if on_expert:
-                    clf.fit(x_train, y_train,
-                            expert_preferred_conditions=st.session_state.pref_list,
-                            expert_forbidden_conditions=st.session_state.forb_list,
-                            expert_rules=st.session_state.ind_exp_list)
-                else:
-                    clf.fit(x_train, y_train)
+                try:
+                    if on_expert:
+                        clf.fit(x_train, y_train, **
+                                parse_expert_params_to_fit())
+                    else:
+                        clf.fit(x_train, y_train)
+                except Exception as e:
+                    st.error(
+                        "An error occurred during model training. Make sure the parameters are correct.")
+                    st.stop()
 
                 listener.finish()
 
@@ -173,7 +177,12 @@ if st.session_state.data:
 
                 listener = MyProgressListener(eval_type, nfold)
                 clf.add_event_listener(listener)
-                entire_model = clf.fit(x, y)
+                try:
+                    entire_model = clf.fit(x, y)
+                except Exception as e:
+                    st.error(
+                        "An error occurred during model training. Make sure the parameters are correct.")
+                    st.stop()
                 listener.finish()
 
                 entire_model_rules = []
@@ -190,7 +199,12 @@ if st.session_state.data:
                         x_train, x_test = x.iloc[train_index], x.iloc[test_index]
                         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-                        clf.fit(x_train, y_train)
+                        try:
+                            clf.fit(x_train, y_train)
+                        except Exception as e:
+                            st.error(
+                                "An error occurred during model training. Make sure the parameters are correct.")
+                            st.stop()
                         listener.finish()
 
                         # Calculate ruleset statistics and prediction indicators for CV iteration
