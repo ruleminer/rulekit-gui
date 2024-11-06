@@ -98,10 +98,10 @@ if st.session_state.data:
         # Proceed if the data has been loaded and rule generation has been initiated
         if not st.session_state.generation:
             st.button("Generate rules", on_click=toggle_generation)
-        listener = MyProgressListener(
-            eval_type, nfold)
 
         if st.session_state.generation:
+            listener = MyProgressListener(
+                eval_type, nfold)
             # Split the data into independent variables and dependent variable
             x, y = process_data(data, model_type)
             # Split the dataset according to settings
@@ -221,25 +221,23 @@ if st.session_state.data:
                         st.session_state.statistics.append(iter_ruleset_stats)
                         st.session_state.indicators.append(
                             iter_prediction_indicators)
-
-                    ruleset_stats = pd.DataFrame(st.session_state.statistics)
-                    ruleset_stats.index = [
-                        f"Fold {i}" for i in range(1, nfold+1)]
-                    st.write("Ruleset statistics")
-                    st.table(ruleset_stats)
                 else:
                     st.error(
                         "An empty ruleset was generated. Try changing the model settings.")
 
             st.session_state.generation = False
+            st.session_state.previous_mode = eval_type
+            st.session_state.previous_nfold = nfold
 
         if len(st.session_state.generated_rules) > 0:
-            if eval_type == EvaluationType.CROSS_VALIDATION:
+            if st.session_state.previous_mode == EvaluationType.CROSS_VALIDATION:
+                ruleset_stats = pd.DataFrame(st.session_state.statistics)
+                ruleset_stats.index = [
+                    f"Fold {i}" for i in range(1, st.session_state.previous_nfold + 1)]
+                st.write("Ruleset statistics")
+                st.table(ruleset_stats)
                 st.write("Rules for entire model")
-                st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
-            else:
-                listener.placeholder.table(
-                    pd.Series(st.session_state.generated_rules, name="Rules"))
+            st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
 
     with tab4:
         if not st.session_state.ruleset_empty and st.session_state.statistics:

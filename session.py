@@ -9,6 +9,8 @@ DEFAULT_SESSION = {
     "data": False,
     "ruleset_empty": False,
     "generation": False,
+    "previous_mode": None,
+    "previous_nfold": None,
     "generated_rules": pd.Series(name="Rules"),
     "statistics": [],
     "indicators": [],
