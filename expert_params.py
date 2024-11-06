@@ -42,7 +42,8 @@ def _define_expert_rules(expert_rules=None):
 
     st.write("")
     st.write("Expert induction rules")
-    expert_rule = st.text_input("Insert expert rule", value="")
+    expert_rule = st.text_input(
+        "Insert expert rule in the correct format", value="")
 
     if expert_rule != "" and expert_rule not in expert_rules:
         expert_rules.append(expert_rule)
@@ -58,7 +59,7 @@ def _define_preferred_elements(preferred_elements=None):
     st.write("")
     st.write("Preferred attributes/conditions")
     pref_elem = st.text_input(
-        "Insert preferred attribute/condition", value="", key="pref_elem_txt")
+        "Insert preferred attribute/condition in the correct format", value="", key="pref_elem_txt")
     if pref_elem != "" and pref_elem not in preferred_elements:
         preferred_elements.append(pref_elem)
     preferred_elements = st.data_editor(
@@ -73,7 +74,7 @@ def _define_forbidden_elements(forbidden_elements=None):
     st.write("")
     st.write("Forbidden attributes/conditions")
     pref_elem = st.text_input(
-        "Insert forbidden attribute/condition", value="", key="forb_elem_txt")
+        "Insert forbidden attribute/condition in the correct format", value="", key="forb_elem_txt")
     if pref_elem != "" and pref_elem not in forbidden_elements:
         forbidden_elements.append(pref_elem)
     forbidden_elements = st.data_editor(

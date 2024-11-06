@@ -178,7 +178,11 @@ if st.session_state.data:
                 listener = MyProgressListener(eval_type, nfold)
                 clf.add_event_listener(listener)
                 try:
-                    entire_model = clf.fit(x, y)
+                    if on_expert:
+                        entire_model = clf.fit(x, y, **
+                                               parse_expert_params_to_fit())
+                    else:
+                        entire_model = clf.fit(x, y)
                 except Exception as e:
                     st.error(
                         "An error occurred during model training. Make sure the parameters are correct.")
@@ -200,7 +204,11 @@ if st.session_state.data:
                         y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
                         try:
-                            clf.fit(x_train, y_train)
+                            if on_expert:
+                                clf.fit(x_train, y_train, **
+                                        parse_expert_params_to_fit())
+                            else:
+                                clf.fit(x_train, y_train)
                         except Exception as e:
                             st.error(
                                 "An error occurred during model training. Make sure the parameters are correct.")
