@@ -11,6 +11,9 @@ WORKDIR /app
 # Copy the requirements file and install dependencies
 COPY . /app
 RUN pip3 install -r requirements.txt --no-cache-dir
+
+RUN git clone https://github.com/ruleminer/decision-rules.git
+RUN pip3 install ./decision-rules
  
 RUN python -m rulekit download_jar
 
