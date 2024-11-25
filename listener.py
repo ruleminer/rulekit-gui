@@ -3,7 +3,7 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 from rulekit.events import RuleInductionProgressListener
-from rulekit.rules import Rule
+from rulekit.rules import BaseRule
 
 from choices import EvaluationType
 
@@ -20,7 +20,7 @@ class MyProgressListener(RuleInductionProgressListener):
         self.df = pd.Series(name="Rules")
         self.rule = 0
 
-    def on_new_rule(self, rule: Rule):
+    def on_new_rule(self, rule: BaseRule):
         self.rule = str(rule)
 
     def on_progress(
