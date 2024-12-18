@@ -12,6 +12,7 @@ DEFAULT_SESSION = {
     "previous_mode": None,
     "previous_nfold": None,
     "generated_rules": pd.Series(name="Rules"),
+    "current_model": None,
     "statistics": [],
     "indicators": [],
     "confusion_matrices": [],

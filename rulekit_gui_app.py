@@ -4,6 +4,7 @@ from statistics import calculate_ruleset_stats
 import pandas as pd
 import streamlit as st
 from decision_rules.ruleset_factories import ruleset_factory
+from decision_rules.survival import SurvivalRuleSet
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 
@@ -16,6 +17,7 @@ from expert_params import parse_expert_params_to_fit
 from helpers import get_mean_confusion_matrix
 from helpers import get_mean_table
 from helpers import toggle_generation
+from kaplanmeier import plot_kaplan_meier
 from listener import MyProgressListener
 from models import define_model
 from session import set_session_state
@@ -146,6 +148,7 @@ if st.session_state.data:
 
                 if clf.model.rules:
                     ruleset = ruleset_factory(clf, x_train, y_train)
+                    st.session_state.current_model = ruleset
                     ruleset_stats = calculate_ruleset_stats(
                         ruleset, x_test, y_test)
                     prediction_indicators = calculate_prediction_indicators(
@@ -186,6 +189,7 @@ if st.session_state.data:
                         st.session_state.generated_rules[len(
                             st.session_state.generated_rules) + 1] = str(rule)
                     st.session_state.ruleset_empty = False
+                    st.session_state.current_model = ruleset_factory(clf, x, y)
                 else:
                     st.session_state.ruleset_empty = True
 
@@ -237,7 +241,13 @@ if st.session_state.data:
                 st.write("Ruleset statistics")
                 st.table(ruleset_stats)
                 st.write("Rules for entire model")
-            st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
+            if isinstance(st.session_state.current_model, SurvivalRuleSet):
+                for rule in st.session_state.current_model.rules:
+                    with st.popover(str(rule), use_container_width=True):
+                        fig = plot_kaplan_meier(rule)
+                        st.pyplot(fig)
+            else:
+                st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
 
     with tab4:
         if not st.session_state.ruleset_empty and st.session_state.statistics:
