@@ -14,7 +14,10 @@ plt.ioff()
 
 def display_ruleset(ruleset):
     df = create_ruleset_df(ruleset)
-    AgGrid(df, fit_columns_on_grid_load=True)
+    gb = GridOptionsBuilder.from_dataframe(df)
+    gb.configure_default_column(wrapText=True, autoHeight=True)
+    AgGrid(df, gridOptions=gb.build(), enable_enterprise_modules=False,
+           fit_columns_on_grid_load=True)
 
 
 def display_survival_ruleset(ruleset):
@@ -22,8 +25,10 @@ def display_survival_ruleset(ruleset):
     display_df = df.drop(columns=["plot"])
     gb = GridOptionsBuilder.from_dataframe(display_df)
     gb.configure_selection(selection_mode="single", use_checkbox=False)
+    gb.configure_default_column(wrapText=True, autoHeight=True)
     grid_options = gb.build()
     data = AgGrid(display_df,
+                  enable_enterprise_modules=False,
                   gridOptions=grid_options,
                   allow_unsafe_jscode=True,
                   update_mode=GridUpdateMode.SELECTION_CHANGED,
