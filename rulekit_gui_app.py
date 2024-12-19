@@ -17,10 +17,11 @@ from expert_params import parse_expert_params_to_fit
 from helpers import get_mean_confusion_matrix
 from helpers import get_mean_table
 from helpers import toggle_generation
-from kaplanmeier import plot_kaplan_meier
 from listener import MyProgressListener
 from models import define_model
 from session import set_session_state
+from survival import get_survival_rule_string
+from survival import plot_kaplan_meier
 from texts import DATASET_UPLOAD
 from texts import DESCRIPTION
 
@@ -243,7 +244,7 @@ if st.session_state.data:
                 st.write("Rules for entire model")
             if isinstance(st.session_state.current_model, SurvivalRuleSet):
                 for rule in st.session_state.current_model.rules:
-                    with st.popover(str(rule), use_container_width=True):
+                    with st.popover(get_survival_rule_string(rule), use_container_width=True):
                         fig = plot_kaplan_meier(rule)
                         st.pyplot(fig)
             else:
