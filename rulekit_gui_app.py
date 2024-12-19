@@ -19,9 +19,9 @@ from helpers import get_mean_table
 from helpers import toggle_generation
 from listener import MyProgressListener
 from models import define_model
+from ruleset import display_ruleset
+from ruleset import display_survival_ruleset
 from session import set_session_state
-from survival import get_survival_rule_string
-from survival import plot_kaplan_meier
 from texts import DATASET_UPLOAD
 from texts import DESCRIPTION
 
@@ -242,13 +242,12 @@ if st.session_state.data:
                 st.write("Ruleset statistics")
                 st.table(ruleset_stats)
                 st.write("Rules for entire model")
-            if isinstance(st.session_state.current_model, SurvivalRuleSet):
-                for rule in st.session_state.current_model.rules:
-                    with st.popover(get_survival_rule_string(rule), use_container_width=True):
-                        fig = plot_kaplan_meier(rule)
-                        st.pyplot(fig)
             else:
-                st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
+                st.write("Ruleset")
+            if isinstance(st.session_state.current_model, SurvivalRuleSet):
+                display_survival_ruleset(st.session_state.current_model)
+            else:
+                display_ruleset(st.session_state.current_model)
 
     with tab4:
         if not st.session_state.ruleset_empty and st.session_state.statistics:
