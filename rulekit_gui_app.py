@@ -4,6 +4,7 @@ from statistics import calculate_ruleset_stats
 import pandas as pd
 import streamlit as st
 from decision_rules.ruleset_factories import ruleset_factory
+from decision_rules.survival import SurvivalRuleSet
 from sklearn.model_selection import StratifiedKFold
 from sklearn.model_selection import train_test_split
 
@@ -18,6 +19,8 @@ from helpers import get_mean_table
 from helpers import toggle_generation
 from listener import MyProgressListener
 from models import define_model
+from ruleset import display_ruleset
+from ruleset import display_survival_ruleset
 from session import set_session_state
 from texts import DATASET_UPLOAD
 from texts import DESCRIPTION
@@ -146,6 +149,7 @@ if st.session_state.data:
 
                 if clf.model.rules:
                     ruleset = ruleset_factory(clf, x_train, y_train)
+                    st.session_state.current_model = ruleset
                     ruleset_stats = calculate_ruleset_stats(
                         ruleset, x_test, y_test)
                     prediction_indicators = calculate_prediction_indicators(
@@ -186,6 +190,7 @@ if st.session_state.data:
                         st.session_state.generated_rules[len(
                             st.session_state.generated_rules) + 1] = str(rule)
                     st.session_state.ruleset_empty = False
+                    st.session_state.current_model = ruleset_factory(clf, x, y)
                 else:
                     st.session_state.ruleset_empty = True
 
@@ -237,7 +242,12 @@ if st.session_state.data:
                 st.write("Ruleset statistics")
                 st.table(ruleset_stats)
                 st.write("Rules for entire model")
-            st.table(pd.Series(st.session_state.generated_rules, name="Rules"))
+            else:
+                st.write("Ruleset")
+            if isinstance(st.session_state.current_model, SurvivalRuleSet):
+                display_survival_ruleset(st.session_state.current_model)
+            else:
+                display_ruleset(st.session_state.current_model)
 
     with tab4:
         if not st.session_state.ruleset_empty and st.session_state.statistics:
