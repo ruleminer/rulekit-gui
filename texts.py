@@ -9,5 +9,7 @@ In order to make the application work, your dataset must be properly prepared:
 """
 
 DESCRIPTION = """
-RuleKit GUI (v2.1.18) This is a demo. The fully functional application is available at www.ruleminer.ai
+Welcome to RuleKit GUI (v2.1.18).
+<br>
+For additional features and advanced functionality in rule-based analysis, please visit [RuleMiner](https://ruleminer.ai).
 """
