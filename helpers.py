@@ -6,19 +6,25 @@ ROUND_DECIMAL_PLACES = 3
 
 def get_mean_table(data: list[dict]) -> pd.DataFrame:
     if len(data) == 1:
-        return _format_table(data[0])
+        data = _format_table(data[0])
+        data = pd.DataFrame(data)
+        return data
     data = pd.DataFrame(data)
     mean = data.mean().round(ROUND_DECIMAL_PLACES).astype(str)
     std = data.std().round(ROUND_DECIMAL_PLACES).astype(str)
     data = mean + " ± " + std
     data = data.replace("nan ± nan", "-")
     data.name = ""
+    data = pd.DataFrame(data)
     return data
 
 
 def get_mean_confusion_matrix(confusion_matrix: list[dict]):
     if len(confusion_matrix) == 1:
-        return pd.DataFrame(confusion_matrix[0]).set_index("classes")
+        confusion_matrix = pd.DataFrame(
+            confusion_matrix[0]).set_index("classes")
+        confusion_matrix.index.name = None
+        return confusion_matrix
     confusion_matrix = pd.concat([pd.DataFrame(conf)
                                  for conf in confusion_matrix])
     mean = confusion_matrix.groupby("classes").mean().round(
@@ -26,7 +32,7 @@ def get_mean_confusion_matrix(confusion_matrix: list[dict]):
     std = confusion_matrix.groupby("classes").std().round(
         ROUND_DECIMAL_PLACES).astype(str)
     data = mean + " ± " + std
-    data.index.name = "classes"
+    data.index.name = None
     return data
 
 
