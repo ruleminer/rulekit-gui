@@ -19,6 +19,7 @@ class MyProgressListener(RuleInductionProgressListener):
         self._nfolds = nfolds
         self.df = pd.Series(name="Rules")
         self.rule = 0
+        self._show_header()
 
     def on_new_rule(self, rule: BaseRule):
         self.rule = str(rule)
@@ -32,14 +33,7 @@ class MyProgressListener(RuleInductionProgressListener):
             (total_examples_count - uncovered_examples_count) / total_examples_count)
 
         if progress > st.session_state.prev_progress:
-            if self._nfolds is not None:
-                if self._nruns > 0:
-                    text = f"Generating rules - iteration {self._nruns}..."
-                else:
-                    text = "Generating rules for the entire dataset..."
-            else:
-                text = "Generating rules..."
-            self.progress_bar.progress(progress, text=text)
+            self._show_header(progress)
             st.session_state.prev_progress = progress
 
         self.df[len(self.df) + 1] = self.rule
@@ -54,3 +48,13 @@ class MyProgressListener(RuleInductionProgressListener):
         st.session_state.prev_progress = 0
         self.placeholder.empty()
         self._nruns += 1
+
+    def _show_header(self, progress: float = 0):
+        if self._nfolds is not None:
+            if self._nruns > 0:
+                text = f"Generating rules - iteration {self._nruns}..."
+            else:
+                text = "Generating rules for the entire dataset..."
+        else:
+            text = "Generating rules..."
+        self.progress_bar.progress(progress, text=text)
