@@ -249,15 +249,18 @@ if st.session_state.data:
             else:
                 display_ruleset(st.session_state.current_model)
 
-    with tab4:
+    with (tab4):
         if not st.session_state.ruleset_empty and st.session_state.statistics:
-            st.write("Ruleset statistics")
+            st.subheader("Ruleset statistics")
             ruleset_stats = get_mean_table(st.session_state.statistics)
-            st.table(ruleset_stats)
+            st.write(ruleset_stats.to_html(
+                header=False), unsafe_allow_html=True)
             if model_type == ModelType.CLASSIFICATION and st.session_state.confusion_matrices:
-                st.write("Confusion matrix")
-                st.table(get_mean_confusion_matrix(
-                    st.session_state.confusion_matrices))
-            st.write("Prediction indicators")
+                st.subheader("Confusion matrix")
+                confusion_matrix = get_mean_confusion_matrix(
+                    st.session_state.confusion_matrices)
+                st.write(confusion_matrix.to_html(), unsafe_allow_html=True)
+            st.subheader("Prediction indicators")
             prediction_indicators = get_mean_table(st.session_state.indicators)
-            st.table(prediction_indicators)
+            st.write(prediction_indicators.to_html(
+                header=False), unsafe_allow_html=True)
