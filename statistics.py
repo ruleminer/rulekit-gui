@@ -13,12 +13,15 @@ from decision_rules.survival.prediction_indicators import calculate_for_survival
 
 
 def calculate_ruleset_stats(ruleset: AbstractRuleSet, X: pd.DataFrame, y: pd.Series):
-    stats = ruleset.calculate_ruleset_stats()
     coverage_matrix = ruleset.calculate_rules_coverages(X, y)
+    stats = ruleset.calculate_ruleset_stats()
     fraction_examples_covered: float = coverage_matrix.any(1).mean()
     stats['fraction_examples_covered'] = fraction_examples_covered
     if isinstance(ruleset, SurvivalRuleSet):
-        return stats
+        stats = {
+            key.replace("_", " "): value for key, value in stats.items()
+        }
+        return pd.DataFrame(stats, index=["metric"]).T
     if isinstance(ruleset, RegressionRuleSet):
         p_values = ruleset.calculate_p_values(y)
     else:
@@ -30,7 +33,7 @@ def calculate_ruleset_stats(ruleset: AbstractRuleSet, X: pd.DataFrame, y: pd.Ser
     stats = {
         key.replace("_", " "): value for key, value in stats.items()
     }
-    return stats
+    return pd.DataFrame(stats, index=["metric"]).T
 
 
 def calculate_prediction_indicators(ruleset: AbstractRuleSet, X: pd.DataFrame, y: pd.Series):
@@ -44,4 +47,8 @@ def calculate_prediction_indicators(ruleset: AbstractRuleSet, X: pd.DataFrame, y
     indicators = {
         key.replace("_", " "): value for key, value in indicators.items()
     }
-    return indicators
+    if isinstance(ruleset, ClassificationRuleSet):
+        confusion_matrix = indicators.pop("Confusion matrix")
+        return pd.DataFrame(indicators, index=["indicator"]).T, pd.DataFrame(confusion_matrix)
+    else:
+        return pd.DataFrame(indicators, index=["indicator"]).T
