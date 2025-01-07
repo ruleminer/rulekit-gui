@@ -139,8 +139,6 @@ if st.session_state.data:
                         "An error occurred during model training. Make sure the parameters are correct.")
                     st.stop()
 
-                listener.finish()
-
                 # Displaying the ruleset based on given model
                 ruleset = clf.model
                 for rule in clf.model.rules:
@@ -169,6 +167,8 @@ if st.session_state.data:
                     st.session_state.ruleset_empty = True
                     st.error(
                         "An empty ruleset was generated. Try changing the model settings.")
+
+                listener.finish()
 
             # Model training process for EvaluationType.CROSS_VALIDATION evaluation type
             else:
