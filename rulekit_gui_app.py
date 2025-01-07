@@ -14,6 +14,7 @@ from choices import ModelType
 from dataset import load_data
 from dataset import process_data
 from expert_params import parse_expert_params_to_fit
+from helpers import format_confusion_matrix
 from helpers import format_table
 from helpers import get_mean_confusion_matrix
 from helpers import get_mean_table
@@ -156,18 +157,17 @@ if st.session_state.data:
                             ruleset, x_train, y_train)
                         test_ruleset_stats = calculate_ruleset_stats(
                             ruleset, x_test, y_test)
+                        train_prediction_indicators = calculate_prediction_indicators(
+                            ruleset, x_train, y_train)
+                        test_prediction_indicators = calculate_prediction_indicators(
+                            ruleset, x_test, y_test)
                         if model_type == ModelType.CLASSIFICATION:
-                            train_prediction_indicators, _ = calculate_prediction_indicators(
-                                ruleset, x_train, y_train)
-                            test_prediction_indicators, confusion_matrix = calculate_prediction_indicators(
-                                ruleset, x_test, y_test)
+                            train_prediction_indicators, train_confusion_matrix = train_prediction_indicators
+                            test_prediction_indicators, test_confusion_matrix = test_prediction_indicators
                             st.session_state.confusion_matrices.append(
-                                confusion_matrix)
-                        else:
-                            train_prediction_indicators = calculate_prediction_indicators(
-                                ruleset, x_train, y_train)
-                            test_prediction_indicators = calculate_prediction_indicators(
-                                ruleset, x_test, y_test)
+                                train_confusion_matrix)
+                            st.session_state.confusion_matrices.append(
+                                test_confusion_matrix)
                         ruleset_stats = pd.DataFrame(
                             {"train": train_ruleset_stats["metric"],
                                 "test": test_ruleset_stats["metric"]}
@@ -182,13 +182,9 @@ if st.session_state.data:
                         prediction_indicators = calculate_prediction_indicators(
                             ruleset, x_test, y_test)
                         if model_type == ModelType.CLASSIFICATION:
-                            prediction_indicators, confusion_matrix = calculate_prediction_indicators(
-                                ruleset, x_test, y_test)
+                            prediction_indicators, confusion_matrix = prediction_indicators
                             st.session_state.confusion_matrices.append(
                                 confusion_matrix)
-                        else:
-                            prediction_indicators = calculate_prediction_indicators(
-                                ruleset, x_test, y_test)
                     st.session_state.statistics.append(ruleset_stats)
                     st.session_state.indicators.append(prediction_indicators)
                     st.session_state.ruleset_empty = False
@@ -289,12 +285,24 @@ if st.session_state.data:
                 header=(eval_type == EvaluationType.TRAIN_TEST)), unsafe_allow_html=True)
             if model_type == ModelType.CLASSIFICATION and st.session_state.confusion_matrices:
                 if eval_type == EvaluationType.TRAIN_TEST:
+                    st.subheader("Confusion matrix (train data)")
+                    st.write(
+                        format_confusion_matrix(
+                            st.session_state.confusion_matrices[0]).to_html(),
+                        unsafe_allow_html=True,
+                    )
                     st.subheader("Confusion matrix (test data)")
+                    st.write(
+                        format_confusion_matrix(
+                            st.session_state.confusion_matrices[1]).to_html(),
+                        unsafe_allow_html=True,
+                    )
                 else:
                     st.subheader("Confusion matrix")
-                confusion_matrix = get_mean_confusion_matrix(
-                    st.session_state.confusion_matrices)
-                st.write(confusion_matrix.to_html(), unsafe_allow_html=True)
+                    confusion_matrix = get_mean_confusion_matrix(
+                        st.session_state.confusion_matrices)
+                    st.write(confusion_matrix.to_html(),
+                             unsafe_allow_html=True)
             st.subheader("Prediction indicators")
             prediction_indicators = get_mean_table(st.session_state.indicators)
             st.write(prediction_indicators.to_html(

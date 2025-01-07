@@ -17,12 +17,15 @@ def get_mean_table(data: list[pd.DataFrame]) -> pd.DataFrame:
     return data
 
 
+def format_confusion_matrix(confusion_matrix: pd.DataFrame):
+    confusion_matrix = confusion_matrix.set_index("classes")
+    confusion_matrix.index.name = None
+    return confusion_matrix
+
+
 def get_mean_confusion_matrix(confusion_matrix: list[pd.DataFrame]):
     if len(confusion_matrix) == 1:
-        confusion_matrix = pd.DataFrame(
-            confusion_matrix[0]).set_index("classes")
-        confusion_matrix.index.name = None
-        return confusion_matrix
+        return format_confusion_matrix(confusion_matrix[0])
     confusion_matrix = pd.concat([pd.DataFrame(conf)
                                  for conf in confusion_matrix])
     mean = confusion_matrix.groupby("classes").mean().round(
