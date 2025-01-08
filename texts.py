@@ -9,7 +9,7 @@ In order to make the application work, your dataset must be properly prepared:
 """
 
 DESCRIPTION = """
-Welcome to RuleKit GUI (v2.1.18).
+Welcome to RuleKit GUI (v2.1.24).
 <br>
 For additional features and advanced functionality in rule-based analysis, please visit [RuleMiner](https://ruleminer.ai).
 """
