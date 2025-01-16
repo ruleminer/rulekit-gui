@@ -16,8 +16,20 @@ def display_ruleset(ruleset):
     df = create_ruleset_df(ruleset)
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(wrapText=True, autoHeight=True)
-    AgGrid(df, gridOptions=gb.build(), enable_enterprise_modules=False,
-           fit_columns_on_grid_load=True)
+    gb.configure_column("Rule premise", width=360)
+    gb.configure_column("Conclusion", width=120)
+    gb.configure_column("p", width=60)
+    gb.configure_column("n", width=60)
+    gb.configure_column("P", width=60)
+    gb.configure_column("N", width=60)
+    AgGrid(
+        df,
+        enable_enterprise_modules=False,
+        gridOptions=gb.build(),
+        allow_unsafe_jscode=True,
+        fit_columns_on_grid_load=True,
+        height=_get_height(df),
+    )
 
 
 def display_survival_ruleset(ruleset):
@@ -26,14 +38,19 @@ def display_survival_ruleset(ruleset):
     gb = GridOptionsBuilder.from_dataframe(display_df)
     gb.configure_selection(selection_mode="single", use_checkbox=False)
     gb.configure_default_column(wrapText=True, autoHeight=True)
-    grid_options = gb.build()
-    data = AgGrid(display_df,
-                  enable_enterprise_modules=False,
-                  gridOptions=grid_options,
-                  allow_unsafe_jscode=True,
-                  update_mode=GridUpdateMode.SELECTION_CHANGED,
-                  fit_columns_on_grid_load=True,
-                  )
+    gb.configure_column("Rule premise", width=350)
+    gb.configure_column("Median survival time", width=150)
+    gb.configure_column("p", width=50)
+    gb.configure_column("P", width=50)
+    data = AgGrid(
+        display_df,
+        enable_enterprise_modules=False,
+        gridOptions=gb.build(),
+        allow_unsafe_jscode=True,
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
+        fit_columns_on_grid_load=True,
+        height=_get_height(df),
+    )
     selected_rows = data["selected_rows"]
     if selected_rows is not None and len(selected_rows) != 0:
         st.write("Kaplan-Meier plot for the selected rule:")
@@ -59,6 +76,7 @@ def plot_kaplan_meier(rule):
     ax.set_ylabel("Survival probability", fontsize=15)
     ax.set_xlabel("Time", fontsize=15)
     ax.set_ylim(0, 1.05)
+    ax.set_xlim(0, rule.conclusion.estimator.times.max())
     ax.margins(x=0)
     return fig
 
@@ -74,8 +92,7 @@ def create_ruleset_df(ruleset):
     rows = [
         [
             rule.premise.to_string(rule.column_names),
-            _format_conclusion(rule.conclusion.value) if isinstance(
-                ruleset, SurvivalRuleSet) else str(rule.conclusion),
+            _format_conclusion(rule.conclusion.value),
             rule.coverage.p,
             rule.coverage.n,
             rule.coverage.P,
@@ -104,6 +121,13 @@ def _format_conclusion(conclusion):
     elif conclusion == -np.inf:
         return "-inf"
     elif isinstance(conclusion, float):
-        return f"{conclusion:.2f}"
+        return f"{conclusion:.3f}"
     else:
         return conclusion
+
+
+def _get_height(df):
+    row_heights = df["Rule premise"].apply(
+        lambda x: len(x.replace(" ", "")) // 40 + 1).sum()
+    height = min(int(row_heights) * 30, 500)
+    return height
