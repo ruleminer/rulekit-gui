@@ -53,25 +53,26 @@ def display_survival_ruleset(ruleset):
     )
     selected_rows = data["selected_rows"]
     if selected_rows is not None and len(selected_rows) != 0:
+        rule_index = int(selected_rows.index.values[0])
         st.write("Kaplan-Meier plot for the selected rule:")
-        fig = df.iloc[selected_rows.index]["plot"].values[0]
+        fig = df.loc[rule_index, "plot"]
         st.pyplot(fig)
+        rule = ruleset.rules[rule_index]
+        rule_str = get_survival_rule_string(rule)
+        st.write(rule_str)
     else:
         st.write("Select a rule to display its corresponding Kaplan-Meier plot.")
 
 
 def plot_kaplan_meier(rule):
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.step(rule.conclusion.estimator.times,
-            rule.conclusion.estimator.probabilities, "black")
-    props = dict(boxstyle="round,pad=1", facecolor="grey", alpha=0.2)
-    text_x_coord = (rule.conclusion.estimator.times.max(
-    ) - rule.conclusion.estimator.times.min()) * 0.55 + rule.conclusion.estimator.times.min()
-    rule_str = get_survival_rule_string(rule).replace(
-        "AND ", "AND\n").replace("THEN", "\nTHEN").replace("(p", "\n(p")
-    ax.text(text_x_coord, 0.95, rule_str,
-            wrap=True, bbox=props, fontsize=12,
-            verticalalignment="top")
+    times = rule.conclusion.estimator.times
+    probabilities = rule.conclusion.estimator.probabilities
+    if times[0] != 0.0:
+        times = np.insert(times, 0, 0.0)
+        probabilities = np.insert(probabilities, 0, 1.0)
+    ax.step(times,
+            probabilities, "black", where="post")
     ax.tick_params(axis="both", which="major", labelsize=12)
     ax.set_ylabel("Survival probability", fontsize=15)
     ax.set_xlabel("Time", fontsize=15)
@@ -109,7 +110,8 @@ def create_ruleset_df(ruleset):
         "N",
     ], index=range(len(rows)))
     if isinstance(ruleset, SurvivalRuleSet):
-        df["plot"] = [plot_kaplan_meier(rule) for rule in ruleset.rules]
+        df["plot"] = [plot_kaplan_meier(rule)
+                      for i, rule in enumerate(ruleset.rules)]
         df = df[["Rule premise", "Conclusion", "p", "P", "plot"]]
         df = df.rename(columns={"Conclusion": "Median survival time"})
     return df
