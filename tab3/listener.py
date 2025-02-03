@@ -43,8 +43,10 @@ class MyProgressListener(RuleInductionProgressListener):
         self.progress_bar.progress(100)
         self.progress_bar.empty()
         st.session_state.prev_progress = 0
-        self.placeholder.empty()
         self.n_runs += 1
+
+    def empty(self):
+        self.placeholder.empty()
 
     def _show_header(self, progress: float = 0):
         if self.n_folds is not None:

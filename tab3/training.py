@@ -47,3 +47,4 @@ def train_and_evaluate_all(
 
     st.session_state.generation = False
     st.session_state.ruleset = rulesets[0]
+    listener.empty()
