@@ -12,7 +12,15 @@ from st_aggrid import GridUpdateMode
 plt.ioff()
 
 
-def display_ruleset(ruleset):
+def display_ruleset():
+    ruleset = st.session_state.ruleset
+    if isinstance(ruleset, SurvivalRuleSet):
+        _display_survival_ruleset(ruleset)
+    else:
+        _display_other_ruleset(ruleset)
+
+
+def _display_other_ruleset(ruleset):
     df = create_ruleset_df(ruleset)
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(wrapText=True, autoHeight=True)
@@ -32,7 +40,7 @@ def display_ruleset(ruleset):
     )
 
 
-def display_survival_ruleset(ruleset):
+def _display_survival_ruleset(ruleset):
     df = create_ruleset_df(ruleset)
     display_df = df.drop(columns=["plot"])
     gb = GridOptionsBuilder.from_dataframe(display_df)

@@ -7,8 +7,8 @@ def get_common_expert_params():
         "extend_using_automatic": st.toggle("Add conditions to existing rules automatically", value=False),
         "induce_using_preferred": st.toggle("Allow induction of new rules that contain preferred conditions or are based on preferred attributes", value=False),
         "induce_using_automatic": st.toggle("Allow induction of new rules in a fully automatic manner", value=False),
-        "preferred_conditions_per_rule": st.number_input("Maximum number of preferred conditions per rule", min_value=0, value=0, format='%i'),
-        "preferred_attributes_per_rule": st.number_input("Maximum number of conditions built based on preferred attributes per rule", min_value=0, value=0, format='%i'),
+        "preferred_conditions_per_rule": st.number_input("Maximum number of preferred conditions per rule", min_value=0, value=0, format="%i"),
+        "preferred_attributes_per_rule": st.number_input("Maximum number of conditions built based on preferred attributes per rule", min_value=0, value=0, format="%i"),
     }
     return dictionary
 
