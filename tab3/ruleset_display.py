@@ -21,7 +21,7 @@ def display_ruleset():
 
 
 def _display_other_ruleset(ruleset):
-    df = create_ruleset_df(ruleset)
+    df = _create_ruleset_df(ruleset)
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(wrapText=True, autoHeight=True)
     gb.configure_column("Rule premise", width=360)
@@ -41,7 +41,7 @@ def _display_other_ruleset(ruleset):
 
 
 def _display_survival_ruleset(ruleset):
-    df = create_ruleset_df(ruleset)
+    df = _create_ruleset_df(ruleset)
     display_df = df.drop(columns=["plot"])
     gb = GridOptionsBuilder.from_dataframe(display_df)
     gb.configure_selection(selection_mode="single", use_checkbox=False)
@@ -66,38 +66,42 @@ def _display_survival_ruleset(ruleset):
         fig = df.loc[rule_index, "plot"]
         st.pyplot(fig)
         rule = ruleset.rules[rule_index]
-        rule_str = get_survival_rule_string(rule)
+        rule_str = _get_survival_rule_string(rule)
         st.write(rule_str)
     else:
         st.write("Select a rule to display its corresponding Kaplan-Meier plot.")
 
 
-def plot_kaplan_meier(rule):
+def _plot_kaplan_meier(rule, covered_data):
     fig, ax = plt.subplots(figsize=(10, 6))
     times = rule.conclusion.estimator.times
     probabilities = rule.conclusion.estimator.probabilities
     if times[0] != 0.0:
         times = np.insert(times, 0, 0.0)
         probabilities = np.insert(probabilities, 0, 1.0)
+    last_covered_row = covered_data.sort_values("survival_time").iloc[-1]
+    if last_covered_row["survival_status"] == 1:
+        times = np.insert(times, -1, last_covered_row["survival_time"])
+        probabilities = np.insert(probabilities, -1, 0.0)
     ax.step(times,
             probabilities, "black", where="post")
     ax.tick_params(axis="both", which="major", labelsize=12)
     ax.set_ylabel("Survival probability", fontsize=15)
     ax.set_xlabel("Time", fontsize=15)
     ax.set_ylim(0, 1.05)
-    ax.set_xlim(0, rule.conclusion.estimator.times.max())
+    ax.set_xlim(0, times.max() + 1)
     ax.margins(x=0)
     return fig
 
 
-def get_survival_rule_string(rule):
+def _get_survival_rule_string(rule):
     rule_str = str(rule).replace(
         rule.conclusion.column_name, "median survival time"
     )
-    return re.sub(", [n,N]=\d*", "", rule_str)
+    return re.sub(", [n,N]=[0-9]*", "", rule_str)
 
 
-def create_ruleset_df(ruleset):
+def _create_ruleset_df(ruleset):
     rows = [
         [
             rule.premise.to_string(rule.column_names),
@@ -118,7 +122,10 @@ def create_ruleset_df(ruleset):
         "N",
     ], index=range(len(rows)))
     if isinstance(ruleset, SurvivalRuleSet):
-        df["plot"] = [plot_kaplan_meier(rule)
+        x, y = st.session_state.test[0]
+        data = pd.concat([x, y], axis=1)
+        coverage_matrix = ruleset.calculate_coverage_matrix(x)
+        df["plot"] = [_plot_kaplan_meier(rule, data[coverage_matrix[:, i]])
                       for i, rule in enumerate(ruleset.rules)]
         df = df[["Rule premise", "Conclusion", "p", "P", "plot"]]
         df = df.rename(columns={"Conclusion": "Median survival time"})
