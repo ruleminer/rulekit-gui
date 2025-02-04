@@ -6,13 +6,13 @@ from rulekit.regression import RuleRegressor
 from rulekit.survival import ExpertSurvivalRules
 from rulekit.survival import SurvivalRules
 
-from choices import ModelType
-from expert_params import define_fit_expert_params
-from expert_params import get_common_expert_params
-from induction_params import get_classification_params
-from induction_params import get_common_params
-from induction_params import get_regression_params
-from metrics import get_measures_selection_dict
+from common.choices import ModelType
+from common.expert_params import define_fit_expert_params
+from common.expert_params import get_common_expert_params
+from tab2.induction_params import get_classification_params
+from tab2.induction_params import get_common_params
+from tab2.induction_params import get_regression_params
+from tab2.metrics import get_measures_selection_dict
 
 
 def define_model(model_type: ModelType):
@@ -30,7 +30,7 @@ def _define_model_classification():
     class_param = get_classification_params()
     st.text("")
     on_expert = st.toggle(
-        'Do you want to perform expert induction?', value=False)
+        "Do you want to perform expert induction?", value=False)
 
     if not on_expert:
         clf = RuleClassifier(
@@ -60,7 +60,7 @@ def _define_model_regression():
     reg_param = get_regression_params()
     st.write("")
     on_expert = st.toggle(
-        'Do you want to perform expert induction?', value=False)
+        "Do you want to perform expert induction?", value=False)
 
     if not on_expert:
         clf = RuleRegressor(
@@ -86,11 +86,11 @@ def _define_model_survival():
     param = get_common_params()
     st.text("")
     on_expert = st.toggle(
-        'Do you want to perform expert induction?', value=False)
+        "Do you want to perform expert induction?", value=False)
 
     if not on_expert:
         clf = SurvivalRules(
-            survival_time_attr='survival_time',
+            survival_time_attr="survival_time",
             **param,
         )
     else:
@@ -98,7 +98,7 @@ def _define_model_survival():
         expert_params = get_common_expert_params()
         define_fit_expert_params()
         clf = ExpertSurvivalRules(
-            survival_time_attr='survival_time',
+            survival_time_attr="survival_time",
             **param,
             **expert_params,
         )
