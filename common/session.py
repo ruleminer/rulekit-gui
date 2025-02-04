@@ -1,5 +1,11 @@
 import streamlit as st
 
+"""
+The application relies largely on current data and results being stored in the session state.
+Their initial setting here is not strictly necessary, but it helps prevent certain errors
+and makes the structure of the application clearer.
+"""
+
 
 DEFAULT_SESSION = {
     "data": False,

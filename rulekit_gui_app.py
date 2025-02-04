@@ -13,7 +13,15 @@ from tab3 import toggle_generation
 from tab3 import train_and_evaluate_all
 from tab4 import display_results
 
-# Initialize the website and tabs
+"""
+The main application consists of four tabs:
+1. Dataset: Upload the dataset
+2. Model: Choose the model and set the parameters
+3. Rules: Generate the rules and display them
+4. Evaluation: Display statistics and indicators describing the ruleset
+"""
+
+# Initialize page settings and tabs
 st.set_page_config(page_title="RuleKit", initial_sidebar_state="collapsed")
 st.markdown("""
     <style>
@@ -30,17 +38,16 @@ with st.container(border=True):
     st.markdown(DESCRIPTION, unsafe_allow_html=True)
 tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model", "Rules", "Evaluation"])
 
-# Define session variables - they do not reset when the stop button is pressed.
+# Set initial values in the session state
 set_session_state()
 
-# Load a dataset that complies with the given conditions and in .csv format.
 with tab1:
     st.title("Dataset")
     with st.container(border=True):
         st.write(DATASET_UPLOAD)
     data = load_data()
 
-# If the data has been loaded then here are the defined objects to specify the model and its parameters
+# Only proceed with next steps if dataset has been uploaded
 if st.session_state.data:
     with tab2:
         st.title("Model and Parameters")
@@ -51,7 +58,6 @@ if st.session_state.data:
         clf, metric, on_expert = define_model(model_type)
 
     with tab3:
-        # Proceed if the data has been loaded and rule generation has been initiated
         if not st.session_state.generation:
             st.button("Generate rules", on_click=toggle_generation)
 
@@ -60,7 +66,7 @@ if st.session_state.data:
                 data, model_type, eval_type, div_type, per_div, n_fold, clf, on_expert
             )
 
-        if st.session_state.ruleset:
+        if st.session_state.ruleset is not None:
             if st.session_state.settings["eval_type"] == EvaluationType.CROSS_VALIDATION:
                 display_cross_validation()
             else:
@@ -68,5 +74,5 @@ if st.session_state.data:
             display_ruleset()
 
     with tab4:
-        if st.session_state.ruleset:
+        if st.session_state.ruleset is not None:
             display_results()

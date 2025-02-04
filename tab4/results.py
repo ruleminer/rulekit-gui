@@ -6,6 +6,12 @@ from tab4.helpers import get_mean_table
 
 
 def display_results():
+    """
+    Display the results of the ruleset evaluation
+    - statistics
+    - confusion matrix (only for classification)
+    - prediction indicators
+    """
     st.subheader("Ruleset statistics")
     model_type = st.session_state.settings["model_type"]
     is_train_test = st.session_state.settings["eval_type"] != EvaluationType.ONLY_TRAINING

@@ -9,6 +9,11 @@ from common.choices import EvaluationType
 
 
 class MyProgressListener(RuleInductionProgressListener):
+    """
+    Progress listener compliant with RuleKit.
+    Together with streamlit components, it displays the progress of ongoing rule induction.
+    """
+
     def __init__(self, eval_type: EvaluationType, n_folds: Optional[int] = None):
         super().__init__()
         self.eval_type = eval_type
