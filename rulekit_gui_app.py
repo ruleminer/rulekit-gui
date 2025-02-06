@@ -55,7 +55,7 @@ if st.session_state.data:
 
         st.write("")
         st.write("Algorithm parameters")
-        clf, metric, on_expert = define_model(model_type)
+        clf, metric, fit_expert_params = define_model(model_type)
 
     with tab3:
         if not st.session_state.generation:
@@ -63,7 +63,7 @@ if st.session_state.data:
 
         if st.session_state.generation:
             train_and_evaluate_all(
-                data, model_type, eval_type, div_type, per_div, n_fold, clf, on_expert
+                data, model_type, eval_type, div_type, per_div, n_fold, clf, fit_expert_params
             )
 
         if st.session_state.ruleset is not None:

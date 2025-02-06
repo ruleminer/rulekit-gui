@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 
 
@@ -13,71 +14,46 @@ def get_common_expert_params():
     return dictionary
 
 
-def parse_expert_params_to_fit():
+def define_fit_expert_params():
     expert_params = {
         "expert_rules": [
-            (f"expert_rule-{i+1}", rule) for i, rule in enumerate(st.session_state.expert_rules_list)
+            (f"expert-rule-{i + 1}", rule) for i, rule in enumerate(_define_expert_rules())
         ],
         "expert_preferred_conditions": [
-            (f"preferred-{i+1}", f"1: {pref}") for i, pref in enumerate(st.session_state.pref_list)
+            (f"preferred-{i + 1}", pref) for i, pref in enumerate(_define_preferred_elements())
         ],
         "expert_forbidden_conditions": [
-            (f"forbidden-{i+1}", forb) for i, forb in enumerate(st.session_state.forb_list)
+            (f"forbidden-{i + 1}", forb) for i, forb in enumerate(_define_forbidden_elements())
         ],
     }
+    st.write("For information on correct formatting of expert parameters, visit:")
+    st.write("https://github.com/adaa-polsl/RuleKit/wiki/6-User-guided-induction")
     return expert_params
 
 
-def define_fit_expert_params():
-    st.session_state.expert_rules_list = _define_expert_rules(
-        st.session_state.expert_rules_list)
-    st.session_state.pref_list = _define_preferred_elements(
-        st.session_state.pref_list)
-    st.session_state.forb_list = _define_forbidden_elements(
-        st.session_state.forb_list)
-
-
-def _define_expert_rules(expert_rules=None):
-    expert_rules = expert_rules or []
-
+def _define_expert_rules():
     st.write("")
     st.write("Expert induction rules")
-    expert_rule = st.text_input(
-        "Insert expert rule in the correct format", value="")
-
-    if expert_rule != "" and expert_rule not in expert_rules:
-        expert_rules.append(expert_rule)
-    expert_rules = st.data_editor(
-        expert_rules, num_rows="dynamic", width=1500, key="rules")
-
-    return expert_rules
+    expert_rules = pd.DataFrame(columns=["Expert rules"])
+    expert_rules = st.data_editor(expert_rules, num_rows="dynamic", width=1500)
+    return expert_rules["Expert rules"].tolist()
 
 
-def _define_preferred_elements(preferred_elements=None):
-    preferred_elements = preferred_elements or []
-
+def _define_preferred_elements():
     st.write("")
     st.write("Preferred attributes/conditions")
-    pref_elem = st.text_input(
-        "Insert preferred attribute/condition in the correct format", value="", key="pref_elem_txt")
-    if pref_elem != "" and pref_elem not in preferred_elements:
-        preferred_elements.append(pref_elem)
+    preferred_elements = pd.DataFrame(
+        columns=["Preferred attributes/conditions"])
     preferred_elements = st.data_editor(
-        preferred_elements, num_rows="dynamic", width=1500, key="pref_elem")
+        preferred_elements, num_rows="dynamic", width=1500)
+    return preferred_elements["Preferred attributes/conditions"].tolist()
 
-    return preferred_elements
 
-
-def _define_forbidden_elements(forbidden_elements=None):
-    forbidden_elements = forbidden_elements or []
-
+def _define_forbidden_elements():
     st.write("")
     st.write("Forbidden attributes/conditions")
-    pref_elem = st.text_input(
-        "Insert forbidden attribute/condition in the correct format", value="", key="forb_elem_txt")
-    if pref_elem != "" and pref_elem not in forbidden_elements:
-        forbidden_elements.append(pref_elem)
+    forbidden_elements = pd.DataFrame(
+        columns=["Forbidden attributes/conditions"])
     forbidden_elements = st.data_editor(
-        forbidden_elements, num_rows="dynamic", width=1500, key="forb_elem")
-
-    return forbidden_elements
+        forbidden_elements, num_rows="dynamic", width=1500)
+    return forbidden_elements["Forbidden attributes/conditions"].tolist()
