@@ -38,12 +38,13 @@ def _define_model_classification():
             **param,
             **class_param,
         )
+        fit_expert_params = {}
     else:
         st.write("Expert induction parameters")
         expert_params = get_common_expert_params()
         expert_params["consider_other_classes"] = st.toggle(
             "Induce rules for the remaining classes", value=False)
-        define_fit_expert_params()
+        fit_expert_params = define_fit_expert_params()
         clf = ExpertRuleClassifier(
             **metric,
             **param,
@@ -51,7 +52,7 @@ def _define_model_classification():
             **expert_params,
         )
 
-    return clf, metric["induction_measure"], on_expert
+    return clf, metric["induction_measure"], fit_expert_params
 
 
 def _define_model_regression():
@@ -68,10 +69,11 @@ def _define_model_regression():
             **param,
             **reg_param,
         )
+        fit_expert_params = {}
     else:
         st.write("Expert induction parameters")
         expert_params = get_common_expert_params()
-        define_fit_expert_params()
+        fit_expert_params = define_fit_expert_params()
         clf = ExpertRuleRegressor(
             **metric,
             **param,
@@ -79,7 +81,7 @@ def _define_model_regression():
             **expert_params,
         )
 
-    return clf, metric["induction_measure"], on_expert
+    return clf, metric["induction_measure"], fit_expert_params
 
 
 def _define_model_survival():
@@ -93,14 +95,15 @@ def _define_model_survival():
             survival_time_attr="survival_time",
             **param,
         )
+        fit_expert_params = {}
     else:
         st.write("Expert induction parameters")
         expert_params = get_common_expert_params()
-        define_fit_expert_params()
+        fit_expert_params = define_fit_expert_params()
         clf = ExpertSurvivalRules(
             survival_time_attr="survival_time",
             **param,
             **expert_params,
         )
 
-    return clf, None, on_expert
+    return clf, None, fit_expert_params

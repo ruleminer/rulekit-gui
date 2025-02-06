@@ -6,7 +6,6 @@ from rulekit._operator import BaseOperator
 from common.choices import DivType
 from common.choices import EvaluationType
 from common.choices import ModelType
-from common.expert_params import parse_expert_params_to_fit
 from common.session import commit_current_model_settings
 from common.session import reset_results_in_session
 from tab3.dataset import process_data
@@ -23,7 +22,7 @@ def train_and_evaluate_all(
         per_div: float,
         n_fold: int,
         clf: BaseOperator,
-        on_expert: bool,
+        fit_expert_params: dict,
 ):
     """
     Main method for training and evaluating the ruleset.
@@ -52,8 +51,8 @@ def train_and_evaluate_all(
     rulesets = []
     for (x_train, y_train), (x_test, y_test) in zip(st.session_state.train, st.session_state.test):
         try:
-            if on_expert:
-                clf.fit(x_train, y_train, **parse_expert_params_to_fit())
+            if fit_expert_params:
+                clf.fit(x_train, y_train, **fit_expert_params)
             else:
                 clf.fit(x_train, y_train)
         except:
@@ -61,11 +60,16 @@ def train_and_evaluate_all(
                 "An error occurred during model training. Make sure the parameters are correct.")
             st.stop()
         listener.finish()
-        if clf.model.rules:
-            ruleset = ruleset_factory(clf, x_train, y_train)
-            rulesets.append(ruleset)
-            calculate_iteration_results(
-                ruleset, x_train, y_train, x_test, y_test)
+        if clf.model is not None and clf.model.rules:
+            try:
+                ruleset = ruleset_factory(clf, x_train, y_train)
+                rulesets.append(ruleset)
+                calculate_iteration_results(
+                    ruleset, x_train, y_train, x_test, y_test)
+            except:
+                st.error(
+                    "An unexpected error occurred during ruleset processing. Please contact the development team.")
+                st.stop()
 
     st.session_state.generation = False
     if rulesets:

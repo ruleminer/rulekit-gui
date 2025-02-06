@@ -9,7 +9,7 @@ from common.choices import EvaluationType
 
 def toggle_generation():
     st.session_state.generation = True
-    st.session_state.generated_rules = pd.Series(name="Rules")
+    st.session_state.rules = pd.Series(name="Rules")
     st.session_state.statistics = []
     st.session_state.indicators = []
     st.session_state.confusion_matrices = []
