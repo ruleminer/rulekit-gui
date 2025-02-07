@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import streamlit as st
+from decision_rules.survival.kaplan_meier import KaplanMeierEstimator
 from matplotlib import pyplot as plt
 
 
@@ -25,15 +26,14 @@ def get_kaplan_meier(rule, covered_data):
     return _KMPlotData(times, probabilities)
 
 
-def _plot_kaplan_meier_for_rule(rule, ax):
-    ax.step(rule["KM"].times, rule["KM"].probabilities,
-            where="post", label=rule["ID"])
-
-
-def plot_kaplan_meier(rules_km_data: pd.DataFrame):
+def plot_kaplan_meier(rules_km_data):
     fig, ax = plt.subplots(figsize=(10, 6))
     max_times = rules_km_data["KM"].apply(lambda x: max(x.times)).max()
     rules_km_data.apply(lambda x: _plot_kaplan_meier_for_rule(x, ax), axis=1)
+    dataset = pd.concat([st.session_state.x, st.session_state.y], axis=1)
+    dataset_km = _get_kaplan_meier_for_dataset(dataset)
+    ax.step(dataset_km.time, dataset_km.probability,
+            "black", where="post", label="dataset",)
     ax.tick_params(axis="both", which="major", labelsize=12)
     ax.set_ylabel("Survival probability", fontsize=15)
     ax.set_xlabel("Time", fontsize=15)
@@ -42,3 +42,15 @@ def plot_kaplan_meier(rules_km_data: pd.DataFrame):
     ax.margins(x=0)
     ax.legend(title="Rule ID", title_fontsize=15, fontsize=12)
     st.pyplot(fig)
+
+
+def _plot_kaplan_meier_for_rule(rule, ax):
+    ax.step(rule["KM"].times, rule["KM"].probabilities,
+            where="post", label=rule["ID"])
+
+
+def _get_kaplan_meier_for_dataset(df: pd.DataFrame):
+    estimator = KaplanMeierEstimator()
+    estimator.fit(df["survival_time"].to_numpy(),
+                  df["survival_status"].to_numpy())
+    return estimator.surv_info

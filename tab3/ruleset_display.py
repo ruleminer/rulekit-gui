@@ -68,7 +68,7 @@ def _display_survival_ruleset(ruleset):
     if selected_rows is not None and len(selected_rows) != 0:
         selection = selected_rows.index.astype(int)
         st.write("Kaplan-Meier plot for selected rules")
-        plot_kaplan_meier(df.iloc[selection])
+        plot_kaplan_meier(df.iloc[selection].sort_values("ID"))
     else:
         st.write("Select a rule to display its corresponding Kaplan-Meier plot.")
 
