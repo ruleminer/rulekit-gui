@@ -9,6 +9,9 @@ from st_aggrid import AgGrid
 from st_aggrid import GridOptionsBuilder
 from st_aggrid import GridUpdateMode
 
+from tab3.kaplan_meier import get_kaplan_meier
+from tab3.kaplan_meier import plot_kaplan_meier
+
 plt.ioff()
 
 
@@ -17,13 +20,14 @@ def display_ruleset():
     if isinstance(ruleset, SurvivalRuleSet):
         _display_survival_ruleset(ruleset)
     else:
-        _display_other_ruleset(ruleset)
+        _display_ruleset(ruleset)
 
 
-def _display_other_ruleset(ruleset):
+def _display_ruleset(ruleset):
     df = _create_ruleset_df(ruleset)
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(wrapText=True, autoHeight=True)
+    gb.configure_column("ID", width=40)
     gb.configure_column("Rule premise", width=360)
     gb.configure_column("Conclusion", width=120)
     gb.configure_column("p", width=60)
@@ -42,11 +46,12 @@ def _display_other_ruleset(ruleset):
 
 def _display_survival_ruleset(ruleset):
     df = _create_ruleset_df(ruleset)
-    display_df = df.drop(columns=["plot"])
+    display_df = df.drop(columns=["KM"])
     gb = GridOptionsBuilder.from_dataframe(display_df)
-    gb.configure_selection(selection_mode="single", use_checkbox=False)
+    gb.configure_selection(selection_mode="multiple", use_checkbox=True)
     gb.configure_default_column(wrapText=True, autoHeight=True)
-    gb.configure_column("Rule premise", width=350)
+    gb.configure_column("ID", width=50)
+    gb.configure_column("Rule premise", width=300)
     gb.configure_column("Median survival time", width=150)
     gb.configure_column("p", width=50)
     gb.configure_column("P", width=50)
@@ -61,37 +66,11 @@ def _display_survival_ruleset(ruleset):
     )
     selected_rows = data["selected_rows"]
     if selected_rows is not None and len(selected_rows) != 0:
-        rule_index = int(selected_rows.index.values[0])
-        st.write("Kaplan-Meier plot for the selected rule:")
-        fig = df.loc[rule_index, "plot"]
-        st.pyplot(fig)
-        rule = ruleset.rules[rule_index]
-        rule_str = _get_survival_rule_string(rule)
-        st.write(rule_str)
+        selection = selected_rows.index.astype(int)
+        st.write("Kaplan-Meier plot for selected rules")
+        plot_kaplan_meier(df.iloc[selection].sort_values("ID"))
     else:
         st.write("Select a rule to display its corresponding Kaplan-Meier plot.")
-
-
-def _plot_kaplan_meier(rule, covered_data):
-    fig, ax = plt.subplots(figsize=(10, 6))
-    times = rule.conclusion.estimator.times
-    probabilities = rule.conclusion.estimator.probabilities
-    if times[0] != 0.0:
-        times = np.insert(times, 0, 0.0)
-        probabilities = np.insert(probabilities, 0, 1.0)
-    last_covered_row = covered_data.sort_values("survival_time").iloc[-1]
-    if last_covered_row["survival_status"] == 1:
-        times = np.insert(times, -1, last_covered_row["survival_time"])
-        probabilities = np.insert(probabilities, -1, 0.0)
-    ax.step(times,
-            probabilities, "black", where="post")
-    ax.tick_params(axis="both", which="major", labelsize=12)
-    ax.set_ylabel("Survival probability", fontsize=15)
-    ax.set_xlabel("Time", fontsize=15)
-    ax.set_ylim(0, 1.05)
-    ax.set_xlim(0, times.max() + 1)
-    ax.margins(x=0)
-    return fig
 
 
 def _get_survival_rule_string(rule):
@@ -104,6 +83,7 @@ def _get_survival_rule_string(rule):
 def _create_ruleset_df(ruleset):
     rows = [
         [
+            f"r{i+1}",
             rule.premise.to_string(rule.column_names),
             _format_conclusion(rule.conclusion.value),
             rule.coverage.p,
@@ -111,9 +91,10 @@ def _create_ruleset_df(ruleset):
             rule.coverage.P,
             rule.coverage.N,
         ]
-        for rule in ruleset.rules
+        for i, rule in enumerate(ruleset.rules)
     ]
     df = pd.DataFrame(rows, columns=[
+        "ID",
         "Rule premise",
         "Conclusion",
         "p",
@@ -125,9 +106,9 @@ def _create_ruleset_df(ruleset):
         x, y = st.session_state.test[0]
         data = pd.concat([x, y], axis=1)
         coverage_matrix = ruleset.calculate_coverage_matrix(x)
-        df["plot"] = [_plot_kaplan_meier(rule, data[coverage_matrix[:, i]])
-                      for i, rule in enumerate(ruleset.rules)]
-        df = df[["Rule premise", "Conclusion", "p", "P", "plot"]]
+        df["KM"] = [get_kaplan_meier(rule, data[coverage_matrix[:, i]])
+                    for i, rule in enumerate(ruleset.rules)]
+        df = df[["ID", "Rule premise", "Conclusion", "p", "P", "KM"]]
         df = df.rename(columns={"Conclusion": "Median survival time"})
     return df
 
@@ -145,6 +126,6 @@ def _format_conclusion(conclusion):
 
 def _get_height(df):
     row_heights = df["Rule premise"].apply(
-        lambda x: len(x.replace(" ", "")) // 40 + 1).sum()
+        lambda x: len(x.replace(" ", "")) // 36 + 1).sum()
     height = min(int(row_heights) * 30, 500)
     return height
