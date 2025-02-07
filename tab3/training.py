@@ -58,6 +58,8 @@ def train_and_evaluate_all(
         except:
             st.error(
                 "An error occurred during model training. Make sure the parameters are correct.")
+            st.session_state.generation = False
+            st.session_state.ruleset = None
             st.stop()
         listener.finish()
         if clf.model is not None and clf.model.rules:
@@ -68,7 +70,10 @@ def train_and_evaluate_all(
                     ruleset, x_train, y_train, x_test, y_test)
             except:
                 st.error(
-                    "An unexpected error occurred during ruleset processing. Please contact the development team.")
+                    "An unexpected error occurred during ruleset processing. "
+                    "If you are performing expert induction, make sure you set expert rules, as well as preferred and forbidden conditions/attributes in the correct format.")
+                st.session_state.generation = False
+                st.session_state.ruleset = None
                 st.stop()
 
     st.session_state.generation = False
