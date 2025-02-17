@@ -29,13 +29,14 @@ def plot_kaplan_meier(rules_km_data):
     dataset_km = _get_kaplan_meier_for_dataset(dataset)
     ax.step(dataset_km.times, dataset_km.probabilities,
             "black", where="post", label="dataset",)
-    ax.tick_params(axis="both", which="major", labelsize=12)
-    ax.set_ylabel("Survival probability", fontsize=15)
-    ax.set_xlabel("Time", fontsize=15)
+    ax.tick_params(axis="both", which="major", labelsize=10)
+    ax.set_ylabel("Survival probability", fontsize=10)
+    ax.set_xlabel("Time", fontsize=10)
     ax.set_ylim(0, 1.05)
     ax.set_xlim(0, max_time + 1)
     ax.margins(x=0)
-    ax.legend(fontsize=12, loc="upper right")
+    ax.legend(fontsize=10, loc="upper right")
+    ax.grid(linestyle="dotted", color="black", alpha=0.5)
     st.pyplot(fig)
 
 
