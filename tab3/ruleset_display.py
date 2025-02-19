@@ -126,6 +126,6 @@ def _format_conclusion(conclusion):
 
 def _get_height(df):
     row_heights = df["Rule premise"].apply(
-        lambda x: len(x.replace(" ", "")) // 36 + 1).sum()
-    height = min(int(row_heights) * 30, 500)
+        lambda x: len(x) // 50 + 1).sum()
+    height = min(32 + (int(row_heights)) * 30, 480)
     return height

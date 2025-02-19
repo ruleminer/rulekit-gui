@@ -35,7 +35,7 @@ def _define_expert_rules():
     st.write("")
     st.write("Expert induction rules")
     expert_rules = pd.DataFrame(columns=["Expert rules"])
-    expert_rules = st.data_editor(expert_rules, num_rows="dynamic", width=1500)
+    expert_rules = st.data_editor(expert_rules, num_rows="dynamic", width=800)
     return expert_rules["Expert rules"].tolist()
 
 
@@ -43,10 +43,16 @@ def _define_preferred_elements():
     st.write("")
     st.write("Preferred attributes/conditions")
     preferred_elements = pd.DataFrame(
-        columns=["Preferred attributes/conditions"])
+        columns=["Max occ.", "Preferred attributes/conditions"])
+    column_config = {
+        "Max occ.": {"width": 60},
+        "Preferred attributes/conditions": {"width": 540},
+    }
     preferred_elements = st.data_editor(
-        preferred_elements, num_rows="dynamic", width=1500)
-    return preferred_elements["Preferred attributes/conditions"].tolist()
+        preferred_elements, num_rows="dynamic", width=800, column_config=column_config)
+    elements = preferred_elements.apply(
+        lambda x: f"{x['Max occ.'] or 'inf'}: {x['Preferred attributes/conditions']}", axis=1)
+    return elements.tolist()
 
 
 def _define_forbidden_elements():
