@@ -36,7 +36,8 @@ def _define_expert_rules():
     st.write("Expert induction rules")
     expert_rules = pd.DataFrame(columns=["Expert rules"])
     expert_rules = st.data_editor(expert_rules, num_rows="dynamic", width=800)
-    return expert_rules["Expert rules"].tolist()
+    rules = _select_non_empty(expert_rules, "Expert rules")
+    return rules["Expert rules"].tolist()
 
 
 def _define_preferred_elements():
@@ -50,7 +51,9 @@ def _define_preferred_elements():
     }
     preferred_elements = st.data_editor(
         preferred_elements, num_rows="dynamic", width=800, column_config=column_config)
-    elements = preferred_elements.apply(
+    elements = _select_non_empty(
+        preferred_elements, "Preferred attributes/conditions")
+    elements = elements.apply(
         lambda x: f"{x['Max occ.'] or 'inf'}: {x['Preferred attributes/conditions']}", axis=1)
     return elements.tolist()
 
@@ -62,4 +65,12 @@ def _define_forbidden_elements():
         columns=["Forbidden attributes/conditions"])
     forbidden_elements = st.data_editor(
         forbidden_elements, num_rows="dynamic", width=1500)
-    return forbidden_elements["Forbidden attributes/conditions"].tolist()
+    elements = _select_non_empty(
+        forbidden_elements, "Forbidden attributes/conditions")
+    return elements["Forbidden attributes/conditions"].tolist()
+
+
+def _select_non_empty(df, column):
+    df = df.dropna(subset=[column])
+    not_empty = df[column].apply(lambda x: bool(x.strip()))
+    return df.loc[not_empty]
